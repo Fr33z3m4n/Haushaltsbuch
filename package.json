@@ -11,7 +11,13 @@
     "build": "nx run-many --target=build",
     "lint": "nx run-many --target=lint",
     "graph": "nx graph",
-    "migrate:db": "ts-node apps/backend/src/database/migrate.ts"
+    "migrate:db": "ts-node apps/backend/src/database/migrate.ts",
+    "cy:open": "cypress open --project apps/frontend",
+    "cy:run": "cypress run --project apps/frontend",
+    "cy:run:chrome": "cypress run --project apps/frontend --browser chrome",
+    "cy:run:firefox": "cypress run --project apps/frontend --browser firefox",
+    "e2e": "nx e2e frontend",
+    "e2e:ci": "nx e2e frontend --configuration=ci"
   },
   "dependencies": {
     "@angular/common": "^21.2.0",
