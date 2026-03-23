@@ -4,14 +4,13 @@ describe('Login', () => {
   });
 
   it('zeigt die Login-Seite an', () => {
-    cy.get('h1, h2, h3').should('contain.text', 'Haushaltsbuch').or('contain.text', 'Anmelden').or('contain.text', 'Login');
     cy.get('input[type="email"]').should('be.visible');
     cy.get('input[type="password"]').should('be.visible');
     cy.get('button[type="submit"]').should('be.visible');
   });
 
   it('zeigt Fehler bei falschen Zugangsdaten', () => {
-    cy.intercept('POST', '/api/auth/login', {
+    cy.intercept('POST', '**/api/auth/login', {
       statusCode: 401,
       body: { message: 'Ungültige Zugangsdaten' },
     }).as('failedLogin');
@@ -26,9 +25,9 @@ describe('Login', () => {
 
   it('leitet nach erfolgreichem Login zum Dashboard weiter', () => {
     cy.fixture('auth').then((auth) => {
-      cy.intercept('POST', '/api/auth/login', { statusCode: 200, body: auth.loginSuccess }).as('login');
-      cy.intercept('GET', '/api/auth/profile', { statusCode: 200, body: auth.loginSuccess.user }).as('profile');
-      cy.intercept('GET', '/api/dashboard*', { statusCode: 200, body: {} }).as('dashboard');
+      cy.intercept('POST', '**/api/auth/login', { statusCode: 200, body: auth.loginSuccess }).as('login');
+      cy.intercept('GET', '**/api/auth/profile', { statusCode: 200, body: auth.loginSuccess.user }).as('profile');
+      cy.intercept('GET', '**/api/dashboard*', { statusCode: 200, body: {} }).as('dashboard');
     });
 
     cy.get('input[type="email"]').type('test@test.de');

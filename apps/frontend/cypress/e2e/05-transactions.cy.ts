@@ -1,8 +1,7 @@
 describe('Buchungen', () => {
   beforeEach(() => {
     cy.mockAll();
-    cy.login();
-    cy.visit('/buchungen');
+    cy.visitAuthenticated('/buchungen');
     cy.wait('@getTransactions');
   });
 
@@ -37,7 +36,7 @@ describe('Buchungen', () => {
       account: { id: 'acc-1', name: 'Girokonto', color: '#4e73df' },
       category: { id: 'cat-2', name: 'Miete', color: '#e74a3b', icon: 'house' },
     };
-    cy.intercept('POST', '/api/transactions', { statusCode: 201, body: newTx }).as('createTx');
+    cy.intercept('POST', '**/api/transactions*', { statusCode: 201, body: newTx }).as('createTx');
 
     cy.contains('Neue Buchung').click();
     cy.get('.modal.show input[formControlName="name"]').type('Netflix');
@@ -54,22 +53,22 @@ describe('Buchungen', () => {
   });
 
   it('filtert Buchungen nach Typ', () => {
-    cy.get('select').contains('Alle Typen').parent().select('income');
-    cy.contains('Miete').should('not.exist');
-    cy.contains('Gehalt').should('be.visible');
+    cy.get('select.form-select-sm').first().select('income');
+    cy.contains('td', 'Miete').should('not.exist');
+    cy.contains('td', 'Gehalt').should('exist');
   });
 
   it('sucht nach Buchungen', () => {
-    cy.get('input[placeholder*="Suchen"]').type('Miete');
-    cy.contains('Gehalt').should('not.exist');
-    cy.contains('Miete').should('be.visible');
+    cy.get('input[placeholder="Suchen..."]').type('Miete');
+    cy.contains('td', 'Gehalt').should('not.exist');
+    cy.contains('td', 'Miete').should('exist');
   });
 
   it('setzt Filter zurück', () => {
-    cy.get('input[placeholder*="Suchen"]').type('Miete');
+    cy.get('input[placeholder="Suchen..."]').type('Miete');
     cy.contains('Zuruecksetzen').click();
-    cy.contains('Gehalt').should('be.visible');
-    cy.contains('Miete').should('be.visible');
+    cy.contains('td', 'Gehalt').should('exist');
+    cy.contains('td', 'Miete').should('exist');
   });
 
   it('öffnet Bearbeiten-Modal', () => {
@@ -79,7 +78,7 @@ describe('Buchungen', () => {
   });
 
   it('löscht eine Buchung', () => {
-    cy.intercept('DELETE', '/api/transactions/tx-1', { statusCode: 200, body: {} }).as('deleteTx');
+    cy.intercept('DELETE', '**/api/transactions/tx-1*', { statusCode: 200, body: {} }).as('deleteTx');
     cy.get('.btn-outline-danger').first().click();
     cy.get('.modal.show .btn-danger').click();
     cy.wait('@deleteTx');

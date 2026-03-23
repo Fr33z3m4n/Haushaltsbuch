@@ -1,8 +1,7 @@
 describe('Kategorien', () => {
   beforeEach(() => {
     cy.mockAll();
-    cy.login();
-    cy.visit('/kategorien');
+    cy.visitAuthenticated('/kategorien');
     cy.wait('@getCategories');
   });
 
@@ -31,7 +30,7 @@ describe('Kategorien', () => {
 
   it('speichert eine neue Kategorie', () => {
     const newCat = { id: 'cat-new', name: 'Sport', type: 'expense', color: '#4e73df', icon: 'dumbbell' };
-    cy.intercept('POST', '/api/categories', { statusCode: 201, body: newCat }).as('createCategory');
+    cy.intercept('POST', '**/api/categories*', { statusCode: 201, body: newCat }).as('createCategory');
 
     cy.contains('Neue Kategorie').click();
     cy.get('.modal.show input[formControlName="name"]').type('Sport');

@@ -6,6 +6,7 @@
   "balance": 2190,
   "openIncome": 0,
   "openExpense": 810,
+  "openBalance": 2190,
   "incomeCategories": [
     {
       "categoryId": "cat-1",
@@ -15,14 +16,22 @@
       "openAmount": 0,
       "items": [
         {
-          "id": "tx-1",
-          "name": "Gehalt",
-          "amount": 3000,
+          "transaction": {
+            "id": "tx-1",
+            "name": "Gehalt",
+            "amount": 3000,
+            "frequency": "monthly",
+            "dayOfMonth": 1,
+            "account": { "id": "acc-1", "name": "Girokonto", "color": "#4e73df" }
+          },
           "monthlyAmount": 3000,
-          "frequency": "monthly",
-          "dayOfMonth": 1,
-          "account": { "id": "acc-1", "name": "Girokonto", "color": "#4e73df" },
-          "status": { "isCompleted": true, "completedAt": "2024-03-01" }
+          "status": {
+            "transactionId": "tx-1",
+            "year": 2024,
+            "month": 3,
+            "isCompleted": true,
+            "completedAt": "2024-03-01"
+          }
         }
       ]
     }
@@ -36,14 +45,22 @@
       "openAmount": 800,
       "items": [
         {
-          "id": "tx-2",
-          "name": "Miete",
-          "amount": 800,
+          "transaction": {
+            "id": "tx-2",
+            "name": "Miete",
+            "amount": 800,
+            "frequency": "monthly",
+            "dayOfMonth": 1,
+            "account": { "id": "acc-1", "name": "Girokonto", "color": "#4e73df" }
+          },
           "monthlyAmount": 800,
-          "frequency": "monthly",
-          "dayOfMonth": 1,
-          "account": { "id": "acc-1", "name": "Girokonto", "color": "#4e73df" },
-          "status": { "isCompleted": false, "completedAt": null }
+          "status": {
+            "transactionId": "tx-2",
+            "year": 2024,
+            "month": 3,
+            "isCompleted": false,
+            "completedAt": null
+          }
         }
       ]
     },
@@ -55,14 +72,22 @@
       "openAmount": 10,
       "items": [
         {
-          "id": "tx-3",
-          "name": "Haftpflichtversicherung",
-          "amount": 120,
+          "transaction": {
+            "id": "tx-3",
+            "name": "Haftpflichtversicherung",
+            "amount": 120,
+            "frequency": "annual",
+            "dayOfMonth": 15,
+            "account": { "id": "acc-1", "name": "Girokonto", "color": "#4e73df" }
+          },
           "monthlyAmount": 10,
-          "frequency": "annual",
-          "dayOfMonth": 15,
-          "account": { "id": "acc-1", "name": "Girokonto", "color": "#4e73df" },
-          "status": { "isCompleted": false, "completedAt": null }
+          "status": {
+            "transactionId": "tx-3",
+            "year": 2024,
+            "month": 3,
+            "isCompleted": false,
+            "completedAt": null
+          }
         }
       ]
     }

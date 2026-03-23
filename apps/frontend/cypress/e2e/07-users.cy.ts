@@ -1,8 +1,7 @@
 describe('Benutzerverwaltung', () => {
   beforeEach(() => {
     cy.mockAll();
-    cy.login();
-    cy.visit('/benutzerverwaltung');
+    cy.visitAuthenticated('/benutzerverwaltung');
     cy.wait('@getUsers');
   });
 
@@ -35,7 +34,7 @@ describe('Benutzerverwaltung', () => {
       email: 'hans@test.de', isAdmin: false, isActive: true,
       createdAt: new Date().toISOString()
     };
-    cy.intercept('POST', '/api/users', { statusCode: 201, body: newUser }).as('createUser');
+    cy.intercept('POST', '**/api/users*', { statusCode: 201, body: newUser }).as('createUser');
 
     cy.contains('Neuer Benutzer').click();
     cy.get('.modal.show input[formControlName="firstName"]').type('Hans');

@@ -1,10 +1,7 @@
 describe('Dashboard', () => {
   beforeEach(() => {
     cy.mockAll();
-    cy.login();
-    cy.mockDashboard();
-    cy.visit('/dashboard');
-    cy.wait('@getDashboard');
+    cy.visitAuthenticated('/dashboard');
   });
 
   it('zeigt das Dashboard nach dem Login an', () => {
@@ -12,7 +9,7 @@ describe('Dashboard', () => {
   });
 
   it('zeigt Navigationslinks in der Sidebar', () => {
-    cy.get('nav, [class*="sidebar"]').within(() => {
+    cy.get('nav, [class*="sidebar"]').first().within(() => {
       cy.contains('Dashboard').should('be.visible');
       cy.contains('Buchungen').should('be.visible');
       cy.contains('Konten').should('be.visible');

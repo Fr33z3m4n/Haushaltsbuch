@@ -1,8 +1,7 @@
 describe('Konten', () => {
   beforeEach(() => {
     cy.mockAll();
-    cy.login();
-    cy.visit('/konten');
+    cy.visitAuthenticated('/konten');
     cy.wait('@getAccounts');
   });
 
@@ -32,8 +31,8 @@ describe('Konten', () => {
   it('speichert ein neues Konto', () => {
     cy.fixture('accounts').then((accounts) => {
       const newAccount = { id: 'acc-new', name: 'Sparkasse', type: 'bank', color: '#4e73df', isActive: true };
-      cy.intercept('POST', '/api/accounts', { statusCode: 201, body: newAccount }).as('createAccount');
-      cy.intercept('GET', '/api/accounts', { statusCode: 200, body: [...accounts, newAccount] }).as('getAccountsUpdated');
+      cy.intercept('POST', '**/api/accounts*', { statusCode: 201, body: newAccount }).as('createAccount');
+      cy.intercept('GET', '**/api/accounts*', { statusCode: 200, body: [...accounts, newAccount] }).as('getAccountsUpdated');
     });
 
     cy.contains('Neues Konto').click();
@@ -60,9 +59,9 @@ describe('Konten', () => {
   });
 
   it('löscht ein Konto nach Bestätigung', () => {
-    cy.intercept('DELETE', '/api/accounts/acc-1', { statusCode: 200, body: {} }).as('deleteAccount');
+    cy.intercept('DELETE', '**/api/accounts/acc-1*', { statusCode: 200, body: {} }).as('deleteAccount');
     cy.fixture('accounts').then((accounts) => {
-      cy.intercept('GET', '/api/accounts', { statusCode: 200, body: accounts.filter((a: any) => a.id !== 'acc-1') }).as('getAccountsAfterDelete');
+      cy.intercept('GET', '**/api/accounts*', { statusCode: 200, body: accounts.filter((a: any) => a.id !== 'acc-1') }).as('getAccountsAfterDelete');
     });
 
     cy.get('.fa-ellipsis-vertical').first().click();

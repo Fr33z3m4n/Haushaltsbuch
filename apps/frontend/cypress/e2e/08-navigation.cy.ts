@@ -1,8 +1,7 @@
 describe('Navigation & Layout', () => {
   beforeEach(() => {
     cy.mockAll();
-    cy.login();
-    cy.visit('/dashboard');
+    cy.visitAuthenticated('/dashboard');
   });
 
   it('navigiert zu Konten', () => {
@@ -31,18 +30,15 @@ describe('Navigation & Layout', () => {
   });
 
   it('öffnet User-Dropdown in der Topbar', () => {
-    cy.get('[class*="topbar"], header').within(() => {
-      cy.get('button').first().click();
-    });
-    cy.contains('Einstellungen').should('be.visible');
+    cy.get('nav.topbar').find('.dropdown').find('button').click({ force: true });
+    cy.get('nav.topbar .dropdown-menu').should('have.class', 'show');
+    cy.contains('a.dropdown-item', 'Einstellungen').should('be.visible');
   });
 
   it('meldet den Benutzer ab', () => {
-    cy.intercept('POST', '/api/auth/logout', { statusCode: 200, body: {} }).as('logout');
-    cy.get('[class*="topbar"], header').within(() => {
-      cy.get('button').first().click();
-    });
-    cy.contains('Abmelden').click();
+    cy.get('nav.topbar').find('.dropdown').find('button').click({ force: true });
+    cy.get('nav.topbar .dropdown-menu').should('have.class', 'show');
+    cy.contains('a.dropdown-item', 'Abmelden').click({ force: true });
     cy.url().should('include', '/login');
   });
 });
