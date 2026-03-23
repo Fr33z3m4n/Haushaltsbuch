@@ -13,7 +13,7 @@
     "importHelpers": true,
     "target": "ES2022",
     "module": "preserve",
-    "moduleResolution": "node10",
+    "moduleResolution": "bundler",
     "lib": ["ES2022", "dom", "dom.iterable"]
   },
   "angularCompilerOptions": {
