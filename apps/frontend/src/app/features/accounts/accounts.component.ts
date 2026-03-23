@@ -1,7 +1,7 @@
-import { Component, OnInit, signal, ViewChild, TemplateRef } from '@angular/core';
+import { Component, OnInit, signal, ViewChild, TemplateRef, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { NgbModal, NgbModalRef, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { AccountService } from '../../core/services/account.service';
 import { Account, AccountType, ACCOUNT_TYPE_LABELS, ACCOUNT_TYPE_ICONS } from '../../core/models/account.model';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
@@ -10,7 +10,7 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
 @Component({
   selector: 'app-accounts',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, NgbDropdownModule],
+  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent],
   template: `
     <app-page-header title="Konten" breadcrumb="Konten">
       <button class="btn btn-primary" (click)="openModal()">
@@ -43,15 +43,18 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
                   <span class="badge rounded-pill text-bg-secondary small">{{ getLabel(account.type) }}</span>
                 </div>
               </div>
-              <div ngbDropdown placement="bottom-end">
-                <button class="btn btn-sm btn-link text-muted p-0" ngbDropdownToggle>
+              <div class="position-relative">
+                <button class="btn btn-sm btn-link text-muted p-0"
+                        (click)="toggleDropdown(account.id, $event)">
                   <i class="fa-solid fa-ellipsis-vertical"></i>
                 </button>
-                <div ngbDropdownMenu class="shadow-sm">
-                  <button ngbDropdownItem (click)="openModal(account)">
+                <div class="dropdown-menu dropdown-menu-end shadow-sm"
+                     [class.show]="openDropdownId() === account.id"
+                     style="position:absolute;right:0;top:100%;z-index:1000">
+                  <button class="dropdown-item" (click)="openModal(account); closeDropdown()">
                     <i class="fa-solid fa-pencil me-2 text-primary"></i>Bearbeiten
                   </button>
-                  <button ngbDropdownItem class="text-danger" (click)="confirmDelete(account)">
+                  <button class="dropdown-item text-danger" (click)="confirmDelete(account); closeDropdown()">
                     <i class="fa-solid fa-trash me-2"></i>Loeschen
                   </button>
                 </div>
@@ -138,6 +141,7 @@ export class AccountsComponent implements OnInit {
   editingAccount = signal<Account | null>(null);
   isSaving = signal(false);
   saveError = signal('');
+  openDropdownId = signal<string | null>(null);
 
   form: FormGroup;
   private modalRef: NgbModalRef | null = null;
@@ -145,7 +149,8 @@ export class AccountsComponent implements OnInit {
   constructor(
     private accountService: AccountService,
     private fb: FormBuilder,
-    private ngbModal: NgbModal
+    private ngbModal: NgbModal,
+    private elRef: ElementRef
   ) {
     this.form = this.fb.group({
       name: ['', Validators.required],
@@ -156,6 +161,22 @@ export class AccountsComponent implements OnInit {
   }
 
   ngOnInit(): void { this.loadAccounts(); }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.elRef.nativeElement.contains(event.target)) {
+      this.openDropdownId.set(null);
+    }
+  }
+
+  toggleDropdown(id: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.openDropdownId.set(this.openDropdownId() === id ? null : id);
+  }
+
+  closeDropdown(): void {
+    this.openDropdownId.set(null);
+  }
 
   loadAccounts(): void {
     this.isLoading.set(true);

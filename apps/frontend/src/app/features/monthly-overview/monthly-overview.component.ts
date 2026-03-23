@@ -1,6 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
 import { MonthlyOverviewService } from '../../core/services/monthly-overview.service';
 import { MonthlyOverview, MonthlyOverviewItem, MonthlyOverviewCategory } from '../../core/models/monthly-overview.model';
 import { TransactionFrequency, FREQUENCY_LABELS } from '../../core/models/transaction.model';
@@ -19,7 +18,7 @@ const ACCORDION_STORAGE_KEY = (year: number, month: number) =>
 @Component({
   selector: 'app-monthly-overview',
   standalone: true,
-  imports: [CommonModule, NgbAccordionModule, PageHeaderComponent, StatCardComponent, CurrencyDePipe],
+  imports: [CommonModule, PageHeaderComponent, StatCardComponent, CurrencyDePipe],
   template: `
     <app-page-header title="Monatsübersicht" breadcrumb="Monatsübersicht"></app-page-header>
 
@@ -104,13 +103,13 @@ const ACCORDION_STORAGE_KEY = (year: number, month: number) =>
           <span class="text-success fw-bold">{{ overview()!.totalIncome | currencyDe }}</span>
         </div>
         <div class="card-body p-0">
-          <div ngbAccordion [closeOthers]="false"
-               (shown)="onPanelShown($event)" (hidden)="onPanelHidden($event)">
-            <div *ngFor="let cat of overview()!.incomeCategories"
-                 [ngbAccordionItem]="'income-' + cat.categoryId"
-                 [collapsed]="isPanelCollapsed('income-' + cat.categoryId)">
-              <h2 ngbAccordionHeader class="accordion-header">
-                <button ngbAccordionButton class="accordion-button px-3 py-2">
+        <div class="accordion accordion-flush">
+            <div class="accordion-item border-0" *ngFor="let cat of overview()!.incomeCategories">
+              <h2 class="accordion-header">
+                <button class="accordion-button px-3 py-2"
+                        [class.collapsed]="isPanelCollapsed('income-' + cat.categoryId)"
+                        (click)="togglePanel('income-' + cat.categoryId)"
+                        type="button">
                   <div class="d-flex align-items-center justify-content-between w-100 me-2">
                     <div class="d-flex align-items-center gap-2">
                       <span class="rounded-circle d-inline-block flex-shrink-0"
@@ -129,9 +128,9 @@ const ACCORDION_STORAGE_KEY = (year: number, month: number) =>
                   </div>
                 </button>
               </h2>
-              <div ngbAccordionCollapse>
-                <div ngbAccordionBody class="p-0">
-                  <ng-template>
+              <div class="accordion-collapse"
+                   [class.show]="!isPanelCollapsed('income-' + cat.categoryId)">
+                <div class="accordion-body p-0">
                     <table class="table table-sm mb-0 w-100">
                       <tbody>
                         <ng-container *ngFor="let group of groupByFrequency(cat.items)">
@@ -188,7 +187,6 @@ const ACCORDION_STORAGE_KEY = (year: number, month: number) =>
                         </ng-container>
                       </tbody>
                     </table>
-                  </ng-template>
                 </div>
               </div>
             </div>
@@ -203,13 +201,13 @@ const ACCORDION_STORAGE_KEY = (year: number, month: number) =>
           <span class="text-danger fw-bold">{{ overview()!.totalExpense | currencyDe }}</span>
         </div>
         <div class="card-body p-0">
-          <div ngbAccordion [closeOthers]="false"
-               (shown)="onPanelShown($event)" (hidden)="onPanelHidden($event)">
-            <div *ngFor="let cat of overview()!.expenseCategories"
-                 [ngbAccordionItem]="'expense-' + cat.categoryId"
-                 [collapsed]="isPanelCollapsed('expense-' + cat.categoryId)">
-              <h2 ngbAccordionHeader class="accordion-header">
-                <button ngbAccordionButton class="accordion-button px-3 py-2">
+        <div class="accordion accordion-flush">
+            <div class="accordion-item border-0" *ngFor="let cat of overview()!.expenseCategories">
+              <h2 class="accordion-header">
+                <button class="accordion-button px-3 py-2"
+                        [class.collapsed]="isPanelCollapsed('expense-' + cat.categoryId)"
+                        (click)="togglePanel('expense-' + cat.categoryId)"
+                        type="button">
                   <div class="d-flex align-items-center justify-content-between w-100 me-2">
                     <div class="d-flex align-items-center gap-2">
                       <span class="rounded-circle d-inline-block flex-shrink-0"
@@ -228,9 +226,9 @@ const ACCORDION_STORAGE_KEY = (year: number, month: number) =>
                   </div>
                 </button>
               </h2>
-              <div ngbAccordionCollapse>
-                <div ngbAccordionBody class="p-0">
-                  <ng-template>
+              <div class="accordion-collapse"
+                   [class.show]="!isPanelCollapsed('expense-' + cat.categoryId)">
+                <div class="accordion-body p-0">
                     <table class="table table-sm mb-0 w-100">
                       <tbody>
                         <ng-container *ngFor="let group of groupByFrequency(cat.items)">
@@ -287,7 +285,6 @@ const ACCORDION_STORAGE_KEY = (year: number, month: number) =>
                         </ng-container>
                       </tbody>
                     </table>
-                  </ng-template>
                 </div>
               </div>
             </div>
@@ -350,17 +347,12 @@ export class MonthlyOverviewComponent implements OnInit {
   }
 
   isPanelCollapsed(panelId: string): boolean {
-    // default: open (false)
     return this.collapsedState.get(panelId) ?? false;
   }
 
-  onPanelShown(panelId: string): void {
-    this.collapsedState.set(panelId, false);
-    this.saveAccordionState();
-  }
-
-  onPanelHidden(panelId: string): void {
-    this.collapsedState.set(panelId, true);
+  togglePanel(panelId: string): void {
+    const current = this.collapsedState.get(panelId) ?? false;
+    this.collapsedState.set(panelId, !current);
     this.saveAccordionState();
   }
 

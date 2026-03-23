@@ -1,7 +1,7 @@
-import { Component, OnInit, signal, ViewChild, TemplateRef } from '@angular/core';
+import { Component, OnInit, signal, ViewChild, TemplateRef, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NgbModal, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { UsersService, CreateUserRequest } from '../../core/services/users.service';
 import { User } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
@@ -11,7 +11,7 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
 @Component({
   selector: 'app-users-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, NgbDropdownModule],
+  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent],
   template: `
     <app-page-header title="Benutzerverwaltung" breadcrumb="Benutzerverwaltung"></app-page-header>
 
@@ -67,21 +67,24 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
                 </td>
                 <td class="small text-muted align-middle">{{ user.createdAt | date:'dd.MM.yyyy' }}</td>
                 <td class="text-end align-middle">
-                  <div ngbDropdown placement="bottom-end" container="body">
-                    <button class="btn btn-outline-secondary btn-sm" ngbDropdownToggle>
+                  <div class="position-relative d-inline-block">
+                    <button class="btn btn-outline-secondary btn-sm"
+                            (click)="toggleDropdown(user.id, $event)">
                       <i class="fa-solid fa-ellipsis-vertical"></i>
                     </button>
-                    <div ngbDropdownMenu>
-                      <button ngbDropdownItem (click)="openEdit(user)">
+                    <div class="dropdown-menu dropdown-menu-end"
+                         [class.show]="openDropdownId() === user.id"
+                         style="position:absolute;right:0;top:100%;z-index:1000">
+                      <button class="dropdown-item" (click)="openEdit(user); closeDropdown()">
                         <i class="fa-solid fa-pencil me-2"></i>Bearbeiten
                       </button>
-                      <button ngbDropdownItem (click)="toggleActive(user)">
+                      <button class="dropdown-item" (click)="toggleActive(user); closeDropdown()">
                         <i class="fa-solid me-2" [class.fa-circle-pause]="user.isActive" [class.fa-circle-play]="!user.isActive"></i>
                         {{ user.isActive ? 'Deaktivieren' : 'Aktivieren' }}
                       </button>
                       <div class="dropdown-divider"></div>
-                      <button ngbDropdownItem class="text-danger"
-                              (click)="confirmDelete(user)"
+                      <button class="dropdown-item text-danger"
+                              (click)="confirmDelete(user); closeDropdown()"
                               [disabled]="user.id === currentUser()?.id">
                         <i class="fa-solid fa-trash me-2"></i>Löschen
                       </button>
@@ -183,6 +186,7 @@ export class UsersManagementComponent implements OnInit {
   isSaving = signal(false);
   errorMessage = signal('');
   editingUser: User | null = null;
+  openDropdownId = signal<string | null>(null);
 
   form!: FormGroup;
   private modalRef: any;
@@ -193,9 +197,26 @@ export class UsersManagementComponent implements OnInit {
     private usersService: UsersService,
     private authService: AuthService,
     private ngbModal: NgbModal,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private elRef: ElementRef
   ) {
     this.currentUser = this.authService.currentUser;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.elRef.nativeElement.contains(event.target)) {
+      this.openDropdownId.set(null);
+    }
+  }
+
+  toggleDropdown(id: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.openDropdownId.set(this.openDropdownId() === id ? null : id);
+  }
+
+  closeDropdown(): void {
+    this.openDropdownId.set(null);
   }
 
   ngOnInit(): void {
