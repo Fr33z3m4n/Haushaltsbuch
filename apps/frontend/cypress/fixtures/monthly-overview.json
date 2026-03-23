@@ -1,0 +1,70 @@
+{
+  "year": 2024,
+  "month": 3,
+  "totalIncome": 3000,
+  "totalExpense": 810,
+  "balance": 2190,
+  "openIncome": 0,
+  "openExpense": 810,
+  "incomeCategories": [
+    {
+      "categoryId": "cat-1",
+      "categoryName": "Gehalt",
+      "categoryColor": "#1cc88a",
+      "totalAmount": 3000,
+      "openAmount": 0,
+      "items": [
+        {
+          "id": "tx-1",
+          "name": "Gehalt",
+          "amount": 3000,
+          "monthlyAmount": 3000,
+          "frequency": "monthly",
+          "dayOfMonth": 1,
+          "account": { "id": "acc-1", "name": "Girokonto", "color": "#4e73df" },
+          "status": { "isCompleted": true, "completedAt": "2024-03-01" }
+        }
+      ]
+    }
+  ],
+  "expenseCategories": [
+    {
+      "categoryId": "cat-2",
+      "categoryName": "Miete",
+      "categoryColor": "#e74a3b",
+      "totalAmount": 800,
+      "openAmount": 800,
+      "items": [
+        {
+          "id": "tx-2",
+          "name": "Miete",
+          "amount": 800,
+          "monthlyAmount": 800,
+          "frequency": "monthly",
+          "dayOfMonth": 1,
+          "account": { "id": "acc-1", "name": "Girokonto", "color": "#4e73df" },
+          "status": { "isCompleted": false, "completedAt": null }
+        }
+      ]
+    },
+    {
+      "categoryId": "cat-3",
+      "categoryName": "Versicherung",
+      "categoryColor": "#f6c23e",
+      "totalAmount": 10,
+      "openAmount": 10,
+      "items": [
+        {
+          "id": "tx-3",
+          "name": "Haftpflichtversicherung",
+          "amount": 120,
+          "monthlyAmount": 10,
+          "frequency": "annual",
+          "dayOfMonth": 15,
+          "account": { "id": "acc-1", "name": "Girokonto", "color": "#4e73df" },
+          "status": { "isCompleted": false, "completedAt": null }
+        }
+      ]
+    }
+  ]
+}

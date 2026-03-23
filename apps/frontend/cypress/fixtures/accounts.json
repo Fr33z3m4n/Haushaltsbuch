@@ -1,0 +1,29 @@
+[
+  {
+    "id": "acc-1",
+    "name": "Girokonto",
+    "type": "bank",
+    "description": "Hauptkonto",
+    "color": "#4e73df",
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "acc-2",
+    "name": "PayPal",
+    "type": "paypal",
+    "description": "Online-Zahlungen",
+    "color": "#1cc88a",
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "acc-3",
+    "name": "Kreditkarte",
+    "type": "credit_card",
+    "description": "Visa",
+    "color": "#e74a3b",
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+]

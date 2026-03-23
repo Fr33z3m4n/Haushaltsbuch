@@ -1,0 +1,34 @@
+[
+  {
+    "id": "cat-1",
+    "name": "Gehalt",
+    "type": "income",
+    "color": "#1cc88a",
+    "icon": "briefcase",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "cat-2",
+    "name": "Miete",
+    "type": "expense",
+    "color": "#e74a3b",
+    "icon": "house",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "cat-3",
+    "name": "Versicherung",
+    "type": "expense",
+    "color": "#f6c23e",
+    "icon": "shield-halved",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "cat-4",
+    "name": "Lebensmittel",
+    "type": "expense",
+    "color": "#36b9cc",
+    "icon": "cart-shopping",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+]

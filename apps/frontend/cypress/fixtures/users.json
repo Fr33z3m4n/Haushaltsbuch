@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1",
+    "firstName": "Max",
+    "lastName": "Mustermann",
+    "email": "test@test.de",
+    "isAdmin": true,
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "2",
+    "firstName": "Erika",
+    "lastName": "Musterfrau",
+    "email": "erika@test.de",
+    "isAdmin": false,
+    "isActive": true,
+    "createdAt": "2024-02-01T00:00:00.000Z"
+  }
+]

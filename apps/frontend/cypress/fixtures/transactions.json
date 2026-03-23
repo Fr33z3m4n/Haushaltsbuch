@@ -1,0 +1,50 @@
+[
+  {
+    "id": "tx-1",
+    "name": "Gehalt",
+    "type": "income",
+    "amount": 3000,
+    "frequency": "monthly",
+    "dayOfMonth": 1,
+    "startDate": "2024-01-01",
+    "endDate": null,
+    "notes": "",
+    "accountId": "acc-1",
+    "categoryId": "cat-1",
+    "account": { "id": "acc-1", "name": "Girokonto", "color": "#4e73df" },
+    "category": { "id": "cat-1", "name": "Gehalt", "color": "#1cc88a", "icon": "briefcase" },
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "tx-2",
+    "name": "Miete",
+    "type": "expense",
+    "amount": 800,
+    "frequency": "monthly",
+    "dayOfMonth": 1,
+    "startDate": "2024-01-01",
+    "endDate": null,
+    "notes": "Kaltmiete",
+    "accountId": "acc-1",
+    "categoryId": "cat-2",
+    "account": { "id": "acc-1", "name": "Girokonto", "color": "#4e73df" },
+    "category": { "id": "cat-2", "name": "Miete", "color": "#e74a3b", "icon": "house" },
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "tx-3",
+    "name": "Haftpflichtversicherung",
+    "type": "expense",
+    "amount": 120,
+    "frequency": "annual",
+    "dayOfMonth": 15,
+    "startDate": "2024-01-01",
+    "endDate": null,
+    "notes": "",
+    "accountId": "acc-1",
+    "categoryId": "cat-3",
+    "account": { "id": "acc-1", "name": "Girokonto", "color": "#4e73df" },
+    "category": { "id": "cat-3", "name": "Versicherung", "color": "#f6c23e", "icon": "shield-halved" },
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+]

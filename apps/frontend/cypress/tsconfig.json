@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "lib": ["ES2022", "dom"],
+    "types": ["cypress", "node"],
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "resolveJsonModule": true
+  },
+  "include": ["**/*.ts"]
+}

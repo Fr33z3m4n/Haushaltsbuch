@@ -1,0 +1,80 @@
+name: Cypress E2E Tests
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - 'feature/**'
+      - 'fix/**'
+  pull_request:
+    branches:
+      - master
+      - main
+
+jobs:
+  cypress:
+    name: Cypress E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npx nx build frontend --configuration=production
+        env:
+          NODE_ENV: production
+
+      - name: Start Angular dev server
+        run: |
+          npx nx serve frontend --configuration=development &
+          echo "Angular server starting..."
+
+      - name: Wait for Angular server
+        uses: iFaxity/wait-on-action@v1
+        with:
+          resource: http://localhost:4200
+          timeout: 60000
+
+      - name: Run Cypress tests
+        run: npx cypress run --project apps/frontend
+        env:
+          CYPRESS_BASE_URL: http://localhost:4200
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: apps/frontend/cypress/screenshots
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload videos on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos
+          path: apps/frontend/cypress/videos
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-results
+          path: apps/frontend/cypress/results
+          if-no-files-found: ignore
+          retention-days: 14

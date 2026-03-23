@@ -1,0 +1,18 @@
+{
+  "totalIncome": 3000,
+  "totalExpense": 910,
+  "balance": 2090,
+  "accountBalances": [
+    { "accountId": "acc-1", "accountName": "Girokonto", "balance": 5000 },
+    { "accountId": "acc-2", "accountName": "PayPal", "balance": 250 }
+  ],
+  "monthlyTrend": [
+    { "month": "2024-01", "income": 3000, "expense": 910 },
+    { "month": "2024-02", "income": 3000, "expense": 910 },
+    { "month": "2024-03", "income": 3000, "expense": 920 }
+  ],
+  "expensesByCategory": [
+    { "categoryName": "Miete", "amount": 800, "color": "#e74a3b" },
+    { "categoryName": "Versicherung", "amount": 10, "color": "#f6c23e" }
+  ]
+}

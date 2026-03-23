@@ -34,8 +34,16 @@
           ],
           "serviceWorker": "apps/frontend/ngsw-config.json",
           "budgets": [
-            { "type": "initial", "maximumWarning": "1MB", "maximumError": "2MB" },
-            { "type": "anyComponentStyle", "maximumWarning": "16kB", "maximumError": "32kB" }
+            {
+              "type": "initial",
+              "maximumWarning": "1MB",
+              "maximumError": "2MB"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "16kB",
+              "maximumError": "32kB"
+            }
           ],
           "outputHashing": "all"
         },
@@ -50,8 +58,12 @@
     "serve": {
       "executor": "@angular/build:dev-server",
       "configurations": {
-        "production": { "buildTarget": "frontend:build:production" },
-        "development": { "buildTarget": "frontend:build:development" }
+        "production": {
+          "buildTarget": "frontend:build:production"
+        },
+        "development": {
+          "buildTarget": "frontend:build:development"
+        }
       },
       "defaultConfiguration": "development"
     },
@@ -67,6 +79,23 @@
       "outputs": ["{workspaceRoot}/coverage/apps/frontend"],
       "options": {
         "configFile": "apps/frontend/vite.config.ts"
+      }
+    },
+    "e2e": {
+      "executor": "@nx/cypress:cypress",
+      "options": {
+        "cypressConfig": "apps/frontend/cypress.config.ts",
+        "devServerTarget": "frontend:serve:development",
+        "testingType": "e2e"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "frontend:serve:production"
+        },
+        "ci": {
+          "devServerTarget": "frontend:serve:development",
+          "browser": "electron"
+        }
       }
     }
   }

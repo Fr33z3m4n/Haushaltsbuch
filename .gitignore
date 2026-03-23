@@ -28,3 +28,8 @@ Thumbs.db
 .vscode/
 .idea/
 *.iml
+
+# Cypress
+apps/frontend/cypress/screenshots/
+apps/frontend/cypress/videos/
+apps/frontend/cypress/results/
