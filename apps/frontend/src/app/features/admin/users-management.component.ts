@@ -224,6 +224,7 @@ export class UsersManagementComponent implements OnInit, AfterViewInit, OnDestro
     private elRef: ElementRef
   ) {
     this.currentUser = this.authService.currentUser;
+    this.buildForm();
   }
 
   @HostListener('document:click', ['$event'])
