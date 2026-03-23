@@ -1,0 +1,64 @@
+{
+  "name": "backend",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/backend/src",
+  "tags": ["type:app", "scope:backend"],
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/backend",
+        "main": "apps/backend/src/index.ts",
+        "tsConfig": "apps/backend/tsconfig.app.json",
+        "webpackConfig": "apps/backend/webpack.config.js",
+        "generatePackageJson": true,
+        "assets": [
+          {
+            "glob": "migrations/**/*.sql",
+            "input": "apps/backend/src/database",
+            "output": "src/database"
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false
+        },
+        "development": {
+          "optimization": false,
+          "sourceMap": true
+        }
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "command": "npx ts-node-dev --respawn --transpile-only --project apps/backend/tsconfig.json --require dotenv/config -- apps/backend/src/index.ts",
+        "cwd": ".",
+        "env": {
+          "DOTENV_CONFIG_PATH": "apps/backend/.env"
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "command": "node --env-file=apps/backend/.env dist/apps/backend/main.js"
+        }
+      }
+    },
+    "migrate-db": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node apps/backend/src/database/migrate.ts",
+        "cwd": "."
+      }
+    }
+  }
+}

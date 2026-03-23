@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS `transactions` (
+  `id` VARCHAR(36) NOT NULL,
+  `name` VARCHAR(200) NOT NULL,
+  `amount` DECIMAL(10,2) NOT NULL,
+  `type` ENUM('income','expense') NOT NULL,
+  `frequency` ENUM('monthly','quarterly','semi_annual','annual') NOT NULL DEFAULT 'monthly',
+  `dayOfMonth` TINYINT UNSIGNED NOT NULL,
+  `startDate` DATE NOT NULL,
+  `endDate` DATE NULL,
+  `accountId` VARCHAR(36) NOT NULL,
+  `categoryId` VARCHAR(36) NOT NULL,
+  `userId` VARCHAR(36) NOT NULL,
+  `notes` TEXT NULL,
+  `createdAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updatedAt` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  KEY `FK_transactions_userId` (`userId`),
+  KEY `FK_transactions_accountId` (`accountId`),
+  KEY `FK_transactions_categoryId` (`categoryId`),
+  CONSTRAINT `FK_transactions_userId` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `FK_transactions_accountId` FOREIGN KEY (`accountId`) REFERENCES `accounts` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `FK_transactions_categoryId` FOREIGN KEY (`categoryId`) REFERENCES `categories` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
