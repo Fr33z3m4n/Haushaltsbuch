@@ -128,7 +128,7 @@ const ACCORDION_STORAGE_KEY = (year: number, month: number) =>
                   </div>
                 </button>
               </h2>
-              <div class="accordion-collapse"
+              <div class="accordion-collapse collapse"
                    [class.show]="!isPanelCollapsed('income-' + cat.categoryId)">
                 <div class="accordion-body p-0">
                     <table class="table table-sm mb-0 w-100">
@@ -226,7 +226,7 @@ const ACCORDION_STORAGE_KEY = (year: number, month: number) =>
                   </div>
                 </button>
               </h2>
-              <div class="accordion-collapse"
+              <div class="accordion-collapse collapse"
                    [class.show]="!isPanelCollapsed('expense-' + cat.categoryId)">
                 <div class="accordion-body p-0">
                     <table class="table table-sm mb-0 w-100">
