@@ -1,11 +1,10 @@
-import { Component, OnInit, signal, computed, ViewChild, TemplateRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, signal, computed, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { Modal } from 'bootstrap';
 import { CategoryService } from '../../core/services/category.service';
-import { Category, CategoryType } from '../../core/models/category.model';
+import { Category } from '../../core/models/category.model';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-categories',
@@ -107,69 +106,92 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
       </div>
     </div>
 
-    <ng-template #formModal>
-      <div class="modal-header">
-        <h5 class="modal-title">
-          <i class="fa-solid fa-tags me-2"></i>
-          {{ editingCategory() ? 'Kategorie bearbeiten' : 'Neue Kategorie' }}
-        </h5>
-        <button type="button" class="btn-close" (click)="closeModal()"></button>
-      </div>
-      <form [formGroup]="form" (ngSubmit)="save()">
-        <div class="modal-body">
-          <div class="alert alert-danger" *ngIf="saveError()">{{ saveError() }}</div>
-          <div class="mb-3">
-            <label class="form-label fw-bold small">Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" formControlName="name" placeholder="z.B. Gehalt"
-                   [class.is-invalid]="form.get('name')?.invalid && form.get('name')?.touched">
-            <div class="invalid-feedback">Name ist erforderlich.</div>
+    <!-- Form Modal -->
+    <div class="modal fade" #formModalEl tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fa-solid fa-tags me-2"></i>
+              {{ editingCategory() ? 'Kategorie bearbeiten' : 'Neue Kategorie' }}
+            </h5>
+            <button type="button" class="btn-close" (click)="closeModal()"></button>
           </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold small">Typ <span class="text-danger">*</span></label>
-            <select class="form-select" formControlName="type">
-              <option value="income">Einnahme</option>
-              <option value="expense">Ausgabe</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold small">Font Awesome Icon Name</label>
-            <div class="input-group">
-              <span class="input-group-text">
-                <i class="fa-solid fa-{{form.get('icon')?.value || 'tag'}}"></i>
-              </span>
-              <input type="text" class="form-control" formControlName="icon" placeholder="z.B. house, cart, briefcase">
-            </div>
-            <div class="form-text">
-              Geben Sie einen <a href="https://fontawesome.com/icons?s=solid&f=classic" target="_blank">Font Awesome</a>-Icon-Namen ein (nur den Namen, z.B. <code>house</code>, <code>cart-shopping</code>).
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold small">Farbe</label>
-            <div class="d-flex align-items-center gap-3">
-              <input type="color" class="form-control form-control-color" formControlName="color" style="width:50px;height:38px">
-              <span class="text-muted small">Vorschau:</span>
-              <div class="rounded-circle d-flex align-items-center justify-content-center"
-                   [style.background-color]="form.get('color')?.value + '20'"
-                   [style.border]="'2px solid ' + form.get('color')?.value"
-                   style="width:40px;height:40px">
-                <i class="fa-solid fa-{{form.get('icon')?.value || 'tag'}}" [style.color]="form.get('color')?.value"></i>
+          <form [formGroup]="form" (ngSubmit)="save()">
+            <div class="modal-body">
+              <div class="alert alert-danger" *ngIf="saveError()">{{ saveError() }}</div>
+              <div class="mb-3">
+                <label class="form-label fw-bold small">Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" formControlName="name" placeholder="z.B. Gehalt"
+                       [class.is-invalid]="form.get('name')?.invalid && form.get('name')?.touched">
+                <div class="invalid-feedback">Name ist erforderlich.</div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold small">Typ <span class="text-danger">*</span></label>
+                <select class="form-select" formControlName="type">
+                  <option value="income">Einnahme</option>
+                  <option value="expense">Ausgabe</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold small">Font Awesome Icon Name</label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="fa-solid fa-{{form.get('icon')?.value || 'tag'}}"></i>
+                  </span>
+                  <input type="text" class="form-control" formControlName="icon" placeholder="z.B. house, cart, briefcase">
+                </div>
+                <div class="form-text">
+                  Geben Sie einen <a href="https://fontawesome.com/icons?s=solid&f=classic" target="_blank">Font Awesome</a>-Icon-Namen ein (nur den Namen, z.B. <code>house</code>, <code>cart-shopping</code>).
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold small">Farbe</label>
+                <div class="d-flex align-items-center gap-3">
+                  <input type="color" class="form-control form-control-color" formControlName="color" style="width:50px;height:38px">
+                  <span class="text-muted small">Vorschau:</span>
+                  <div class="rounded-circle d-flex align-items-center justify-content-center"
+                       [style.background-color]="form.get('color')?.value + '20'"
+                       [style.border]="'2px solid ' + form.get('color')?.value"
+                       style="width:40px;height:40px">
+                    <i class="fa-solid fa-{{form.get('icon')?.value || 'tag'}}" [style.color]="form.get('color')?.value"></i>
+                  </div>
+                </div>
               </div>
             </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeModal()">Abbrechen</button>
+              <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving()">
+                <span class="spinner-border spinner-border-sm me-1" *ngIf="isSaving()"></span>
+                {{ isSaving() ? 'Speichern...' : 'Speichern' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div class="modal fade" #confirmModalEl tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fa-solid fa-trash me-2 text-danger"></i>Kategorie loeschen</h5>
+            <button type="button" class="btn-close" (click)="cancelDelete()"></button>
+          </div>
+          <div class="modal-body">{{ confirmMessage }}</div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="cancelDelete()">Abbrechen</button>
+            <button class="btn btn-danger" (click)="executeDelete()">Loeschen</button>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="closeModal()">Abbrechen</button>
-          <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving()">
-            <span class="spinner-border spinner-border-sm me-1" *ngIf="isSaving()"></span>
-            {{ isSaving() ? 'Speichern...' : 'Speichern' }}
-          </button>
-        </div>
-      </form>
-    </ng-template>
+      </div>
+    </div>
   `
 })
-export class CategoriesComponent implements OnInit {
-  @ViewChild('formModal') formModal!: TemplateRef<unknown>;
+export class CategoriesComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('formModalEl') formModalEl!: ElementRef;
+  @ViewChild('confirmModalEl') confirmModalEl!: ElementRef;
 
   categories = signal<Category[]>([]);
   isLoading = signal(true);
@@ -177,14 +199,17 @@ export class CategoriesComponent implements OnInit {
   editingCategory = signal<Category | null>(null);
   isSaving = signal(false);
   saveError = signal('');
+  confirmMessage = '';
 
   form: FormGroup;
-  private modalRef: NgbModalRef | null = null;
+  private bsModal!: Modal;
+  private bsConfirmModal!: Modal;
+  private pendingDeleteCategory: Category | null = null;
 
   incomeCategories = computed(() => this.categories().filter(c => c.type === 'income'));
   expenseCategories = computed(() => this.categories().filter(c => c.type === 'expense'));
 
-  constructor(private categoryService: CategoryService, private fb: FormBuilder, private ngbModal: NgbModal) {
+  constructor(private categoryService: CategoryService, private fb: FormBuilder) {
     this.form = this.fb.group({
       name: ['', Validators.required],
       type: ['expense', Validators.required],
@@ -194,6 +219,16 @@ export class CategoriesComponent implements OnInit {
   }
 
   ngOnInit(): void { this.loadCategories(); }
+
+  ngAfterViewInit(): void {
+    this.bsModal = new Modal(this.formModalEl.nativeElement, { backdrop: 'static', keyboard: false });
+    this.bsConfirmModal = new Modal(this.confirmModalEl.nativeElement);
+  }
+
+  ngOnDestroy(): void {
+    this.bsModal?.dispose();
+    this.bsConfirmModal?.dispose();
+  }
 
   loadCategories(): void {
     this.isLoading.set(true);
@@ -211,12 +246,11 @@ export class CategoriesComponent implements OnInit {
     } else {
       this.form.reset({ name: '', type: 'expense', color: '#4e73df', icon: 'tag' });
     }
-    this.modalRef = this.ngbModal.open(this.formModal, { centered: true, backdrop: 'static' });
+    this.bsModal.show();
   }
 
   closeModal(): void {
-    this.modalRef?.close();
-    this.modalRef = null;
+    this.bsModal.hide();
     this.editingCategory.set(null);
   }
 
@@ -234,10 +268,20 @@ export class CategoriesComponent implements OnInit {
   }
 
   confirmDelete(category: Category): void {
-    const ref = this.ngbModal.open(ConfirmDialogComponent, { centered: true });
-    ref.componentInstance.title = 'Kategorie loeschen';
-    ref.componentInstance.message = `Moechten Sie die Kategorie "${category.name}" wirklich loeschen?`;
-    ref.result.then((r) => { if (r === 'confirmed') this.doDelete(category); }, () => {});
+    this.pendingDeleteCategory = category;
+    this.confirmMessage = `Moechten Sie die Kategorie "${category.name}" wirklich loeschen?`;
+    this.bsConfirmModal.show();
+  }
+
+  cancelDelete(): void {
+    this.bsConfirmModal.hide();
+    this.pendingDeleteCategory = null;
+  }
+
+  executeDelete(): void {
+    this.bsConfirmModal.hide();
+    if (this.pendingDeleteCategory) this.doDelete(this.pendingDeleteCategory);
+    this.pendingDeleteCategory = null;
   }
 
   private doDelete(category: Category): void {

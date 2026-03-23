@@ -1,12 +1,11 @@
-import { Component, OnInit, signal, ViewChild, TemplateRef, HostListener, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, signal, ViewChild, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { Modal } from 'bootstrap';
 import { UsersService, CreateUserRequest } from '../../core/services/users.service';
 import { User } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-users-management',
@@ -101,85 +100,107 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
       </div>
     </div>
 
-    <!-- Create/Edit Modal Template -->
-    <ng-template #formModal let-modal>
-      <div class="modal-header">
-        <h5 class="modal-title">
-          <i class="fa-solid fa-user me-2"></i>{{ editingUser ? 'Benutzer bearbeiten' : 'Neuer Benutzer' }}
-        </h5>
-        <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
-      </div>
-      <div class="modal-body">
-        <form [formGroup]="form">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Vorname *</label>
-              <input type="text" class="form-control" formControlName="firstName"
-                     [class.is-invalid]="form.get('firstName')?.invalid && form.get('firstName')?.touched">
-              <div class="invalid-feedback">Vorname erforderlich</div>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Nachname *</label>
-              <input type="text" class="form-control" formControlName="lastName"
-                     [class.is-invalid]="form.get('lastName')?.invalid && form.get('lastName')?.touched">
-              <div class="invalid-feedback">Nachname erforderlich</div>
-            </div>
-            <div class="col-12">
-              <label class="form-label">E-Mail *</label>
-              <input type="email" class="form-control" formControlName="email"
-                     [class.is-invalid]="form.get('email')?.invalid && form.get('email')?.touched">
-              <div class="invalid-feedback">Gültige E-Mail erforderlich</div>
-            </div>
-            <div class="col-12">
-              <label class="form-label">
-                Passwort {{ editingUser ? '(leer lassen = unverändert)' : '*' }}
-              </label>
-              <input type="password" class="form-control" formControlName="password"
-                     [class.is-invalid]="form.get('password')?.invalid && form.get('password')?.touched"
-                     autocomplete="new-password">
-              <div class="invalid-feedback">Mind. 8 Zeichen, 1 Großbuchstabe, 1 Zahl</div>
-              <div class="form-text" *ngIf="!editingUser">
-                Mind. 8 Zeichen, 1 Großbuchstabe, 1 Zahl
-              </div>
-            </div>
-            <div class="col-12">
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="isAdminCheck" formControlName="isAdmin"
-                       [disabled]="editingUser?.id === currentUser()?.id">
-                <label class="form-check-label" for="isAdminCheck">
-                  <strong>Administrator</strong>
-                  <span class="text-muted small ms-2">— darf Benutzer verwalten</span>
-                </label>
-              </div>
-            </div>
-            <div class="col-12" *ngIf="editingUser">
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="isActiveCheck" formControlName="isActive"
-                       [disabled]="editingUser?.id === currentUser()?.id">
-                <label class="form-check-label" for="isActiveCheck">
-                  <strong>Aktiv</strong>
-                  <span class="text-muted small ms-2">— inaktive Benutzer können sich nicht anmelden</span>
-                </label>
-              </div>
-            </div>
+    <!-- Create/Edit Modal -->
+    <div class="modal fade" #formModalEl tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fa-solid fa-user me-2"></i>{{ editingUser ? 'Benutzer bearbeiten' : 'Neuer Benutzer' }}
+            </h5>
+            <button type="button" class="btn-close" (click)="closeModal()"></button>
           </div>
-          <div class="alert alert-danger mt-3 mb-0" *ngIf="errorMessage()">
-            {{ errorMessage() }}
+          <div class="modal-body">
+            <form [formGroup]="form">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Vorname *</label>
+                  <input type="text" class="form-control" formControlName="firstName"
+                         [class.is-invalid]="form.get('firstName')?.invalid && form.get('firstName')?.touched">
+                  <div class="invalid-feedback">Vorname erforderlich</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Nachname *</label>
+                  <input type="text" class="form-control" formControlName="lastName"
+                         [class.is-invalid]="form.get('lastName')?.invalid && form.get('lastName')?.touched">
+                  <div class="invalid-feedback">Nachname erforderlich</div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">E-Mail *</label>
+                  <input type="email" class="form-control" formControlName="email"
+                         [class.is-invalid]="form.get('email')?.invalid && form.get('email')?.touched">
+                  <div class="invalid-feedback">Gültige E-Mail erforderlich</div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">
+                    Passwort {{ editingUser ? '(leer lassen = unverändert)' : '*' }}
+                  </label>
+                  <input type="password" class="form-control" formControlName="password"
+                         [class.is-invalid]="form.get('password')?.invalid && form.get('password')?.touched"
+                         autocomplete="new-password">
+                  <div class="invalid-feedback">Mind. 8 Zeichen, 1 Großbuchstabe, 1 Zahl</div>
+                  <div class="form-text" *ngIf="!editingUser">
+                    Mind. 8 Zeichen, 1 Großbuchstabe, 1 Zahl
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="isAdminCheck" formControlName="isAdmin"
+                           [disabled]="editingUser?.id === currentUser()?.id">
+                    <label class="form-check-label" for="isAdminCheck">
+                      <strong>Administrator</strong>
+                      <span class="text-muted small ms-2">— darf Benutzer verwalten</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="col-12" *ngIf="editingUser">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="isActiveCheck" formControlName="isActive"
+                           [disabled]="editingUser?.id === currentUser()?.id">
+                    <label class="form-check-label" for="isActiveCheck">
+                      <strong>Aktiv</strong>
+                      <span class="text-muted small ms-2">— inaktive Benutzer können sich nicht anmelden</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="alert alert-danger mt-3 mb-0" *ngIf="errorMessage()">
+                {{ errorMessage() }}
+              </div>
+            </form>
           </div>
-        </form>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="closeModal()">Abbrechen</button>
+            <button class="btn btn-primary" (click)="save()" [disabled]="isSaving()">
+              <span class="spinner-border spinner-border-sm me-1" *ngIf="isSaving()"></span>
+              {{ editingUser ? 'Speichern' : 'Erstellen' }}
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" (click)="modal.dismiss()">Abbrechen</button>
-        <button class="btn btn-primary" (click)="save()" [disabled]="isSaving()">
-          <span class="spinner-border spinner-border-sm me-1" *ngIf="isSaving()"></span>
-          {{ editingUser ? 'Speichern' : 'Erstellen' }}
-        </button>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div class="modal fade" #confirmModalEl tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fa-solid fa-trash me-2 text-danger"></i>Benutzer löschen</h5>
+            <button type="button" class="btn-close" (click)="cancelDelete()"></button>
+          </div>
+          <div class="modal-body">{{ confirmMessage }}</div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="cancelDelete()">Abbrechen</button>
+            <button class="btn btn-danger" (click)="executeDelete()">Löschen</button>
+          </div>
+        </div>
       </div>
-    </ng-template>
+    </div>
   `
 })
-export class UsersManagementComponent implements OnInit {
-  @ViewChild('formModal') formModal!: TemplateRef<unknown>;
+export class UsersManagementComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('formModalEl') formModalEl!: ElementRef;
+  @ViewChild('confirmModalEl') confirmModalEl!: ElementRef;
 
   users = signal<User[]>([]);
   isLoading = signal(false);
@@ -187,16 +208,18 @@ export class UsersManagementComponent implements OnInit {
   errorMessage = signal('');
   editingUser: User | null = null;
   openDropdownId = signal<string | null>(null);
+  confirmMessage = '';
 
   form!: FormGroup;
-  private modalRef: any;
+  private bsModal!: Modal;
+  private bsConfirmModal!: Modal;
+  private pendingDeleteUser: User | null = null;
 
   currentUser;
 
   constructor(
     private usersService: UsersService,
     private authService: AuthService,
-    private ngbModal: NgbModal,
     private fb: FormBuilder,
     private elRef: ElementRef
   ) {
@@ -221,6 +244,16 @@ export class UsersManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+  }
+
+  ngAfterViewInit(): void {
+    this.bsModal = new Modal(this.formModalEl.nativeElement, { backdrop: 'static', keyboard: false });
+    this.bsConfirmModal = new Modal(this.confirmModalEl.nativeElement);
+  }
+
+  ngOnDestroy(): void {
+    this.bsModal?.dispose();
+    this.bsConfirmModal?.dispose();
   }
 
   load(): void {
@@ -250,14 +283,18 @@ export class UsersManagementComponent implements OnInit {
     this.editingUser = null;
     this.errorMessage.set('');
     this.buildForm();
-    this.modalRef = this.ngbModal.open(this.formModal, { centered: true, backdrop: 'static' });
+    this.bsModal.show();
   }
 
   openEdit(user: User): void {
     this.editingUser = user;
     this.errorMessage.set('');
     this.buildForm(user);
-    this.modalRef = this.ngbModal.open(this.formModal, { centered: true, backdrop: 'static' });
+    this.bsModal.show();
+  }
+
+  closeModal(): void {
+    this.bsModal.hide();
   }
 
   save(): void {
@@ -282,7 +319,7 @@ export class UsersManagementComponent implements OnInit {
         next: (updated: User) => {
           this.users.update(list => list.map(u => u.id === updated.id ? { ...u, ...updated } : u));
           this.isSaving.set(false);
-          this.modalRef?.close();
+          this.closeModal();
         },
         error: (err: any) => {
           this.errorMessage.set(err.error?.error ?? 'Fehler beim Speichern');
@@ -301,7 +338,7 @@ export class UsersManagementComponent implements OnInit {
         next: (user: User) => {
           this.users.update(list => [...list, user]);
           this.isSaving.set(false);
-          this.modalRef?.close();
+          this.closeModal();
         },
         error: (err: any) => {
           this.errorMessage.set(err.error?.error ?? 'Fehler beim Erstellen');
@@ -320,15 +357,23 @@ export class UsersManagementComponent implements OnInit {
   }
 
   confirmDelete(user: User): void {
-    const ref = this.ngbModal.open(ConfirmDialogComponent, { centered: true });
-    ref.componentInstance.title = 'Benutzer löschen';
-    ref.componentInstance.message = `Soll "${user.firstName} ${user.lastName}" wirklich gelöscht werden? Alle Daten dieses Benutzers bleiben erhalten.`;
-    ref.result.then(result => {
-      if (result === 'confirmed') {
-        this.usersService.delete(user.id).subscribe({
-          next: () => this.users.update(list => list.filter(u => u.id !== user.id))
-        });
-      }
-    }).catch(() => {});
+    this.pendingDeleteUser = user;
+    this.confirmMessage = `Soll "${user.firstName} ${user.lastName}" wirklich gelöscht werden? Alle Daten dieses Benutzers bleiben erhalten.`;
+    this.bsConfirmModal.show();
+  }
+
+  cancelDelete(): void {
+    this.bsConfirmModal.hide();
+    this.pendingDeleteUser = null;
+  }
+
+  executeDelete(): void {
+    this.bsConfirmModal.hide();
+    if (this.pendingDeleteUser) {
+      this.usersService.delete(this.pendingDeleteUser.id).subscribe({
+        next: () => this.users.update(list => list.filter(u => u.id !== this.pendingDeleteUser!.id))
+      });
+    }
+    this.pendingDeleteUser = null;
   }
 }

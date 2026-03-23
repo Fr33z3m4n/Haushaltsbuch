@@ -1,11 +1,10 @@
-import { Component, OnInit, signal, ViewChild, TemplateRef, HostListener, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, signal, ViewChild, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { Modal } from 'bootstrap';
 import { AccountService } from '../../core/services/account.service';
 import { Account, AccountType, ACCOUNT_TYPE_LABELS, ACCOUNT_TYPE_ICONS } from '../../core/models/account.model';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-accounts',
@@ -80,60 +79,83 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
       </div>
     </div>
 
-    <ng-template #formModal>
-      <div class="modal-header">
-        <h5 class="modal-title">
-          <i class="fa-solid fa-building-columns me-2"></i>
-          {{ editingAccount() ? 'Konto bearbeiten' : 'Neues Konto' }}
-        </h5>
-        <button type="button" class="btn-close" (click)="closeModal()"></button>
-      </div>
-      <form [formGroup]="form" (ngSubmit)="save()">
-        <div class="modal-body">
-          <div class="alert alert-danger" *ngIf="saveError()">{{ saveError() }}</div>
-          <div class="mb-3">
-            <label class="form-label fw-bold small">Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" formControlName="name" placeholder="z.B. Girokonto"
-                   [class.is-invalid]="form.get('name')?.invalid && form.get('name')?.touched">
-            <div class="invalid-feedback">Name ist erforderlich.</div>
+    <!-- Form Modal -->
+    <div class="modal fade" #formModalEl tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fa-solid fa-building-columns me-2"></i>
+              {{ editingAccount() ? 'Konto bearbeiten' : 'Neues Konto' }}
+            </h5>
+            <button type="button" class="btn-close" (click)="closeModal()"></button>
           </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold small">Typ <span class="text-danger">*</span></label>
-            <select class="form-select" formControlName="type">
-              <option value="bank">Bank</option>
-              <option value="paypal">PayPal</option>
-              <option value="credit_card">Kreditkarte</option>
-              <option value="cash">Barvermoegen</option>
-              <option value="other">Sonstiges</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold small">Beschreibung</label>
-            <textarea class="form-control" formControlName="description" rows="2"
-                      placeholder="Optionale Beschreibung"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold small">Farbe</label>
-            <div class="d-flex align-items-center gap-3">
-              <input type="color" class="form-control form-control-color" formControlName="color"
-                     style="width:50px;height:38px">
-              <span class="text-muted small">Waehlen Sie eine Farbe</span>
+          <form [formGroup]="form" (ngSubmit)="save()">
+            <div class="modal-body">
+              <div class="alert alert-danger" *ngIf="saveError()">{{ saveError() }}</div>
+              <div class="mb-3">
+                <label class="form-label fw-bold small">Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" formControlName="name" placeholder="z.B. Girokonto"
+                       [class.is-invalid]="form.get('name')?.invalid && form.get('name')?.touched">
+                <div class="invalid-feedback">Name ist erforderlich.</div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold small">Typ <span class="text-danger">*</span></label>
+                <select class="form-select" formControlName="type">
+                  <option value="bank">Bank</option>
+                  <option value="paypal">PayPal</option>
+                  <option value="credit_card">Kreditkarte</option>
+                  <option value="cash">Barvermoegen</option>
+                  <option value="other">Sonstiges</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold small">Beschreibung</label>
+                <textarea class="form-control" formControlName="description" rows="2"
+                          placeholder="Optionale Beschreibung"></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold small">Farbe</label>
+                <div class="d-flex align-items-center gap-3">
+                  <input type="color" class="form-control form-control-color" formControlName="color"
+                         style="width:50px;height:38px">
+                  <span class="text-muted small">Waehlen Sie eine Farbe</span>
+                </div>
+              </div>
             </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeModal()">Abbrechen</button>
+              <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving()">
+                <span class="spinner-border spinner-border-sm me-1" *ngIf="isSaving()"></span>
+                {{ isSaving() ? 'Speichern...' : 'Speichern' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div class="modal fade" #confirmModalEl tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fa-solid fa-trash me-2 text-danger"></i>Konto loeschen</h5>
+            <button type="button" class="btn-close" (click)="cancelDelete()"></button>
+          </div>
+          <div class="modal-body">{{ confirmMessage }}</div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="cancelDelete()">Abbrechen</button>
+            <button class="btn btn-danger" (click)="executeDelete()">Loeschen</button>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="closeModal()">Abbrechen</button>
-          <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving()">
-            <span class="spinner-border spinner-border-sm me-1" *ngIf="isSaving()"></span>
-            {{ isSaving() ? 'Speichern...' : 'Speichern' }}
-          </button>
-        </div>
-      </form>
-    </ng-template>
+      </div>
+    </div>
   `
 })
-export class AccountsComponent implements OnInit {
-  @ViewChild('formModal') formModal!: TemplateRef<unknown>;
+export class AccountsComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('formModalEl') formModalEl!: ElementRef;
+  @ViewChild('confirmModalEl') confirmModalEl!: ElementRef;
 
   accounts = signal<Account[]>([]);
   isLoading = signal(true);
@@ -142,14 +164,16 @@ export class AccountsComponent implements OnInit {
   isSaving = signal(false);
   saveError = signal('');
   openDropdownId = signal<string | null>(null);
+  confirmMessage = '';
 
   form: FormGroup;
-  private modalRef: NgbModalRef | null = null;
+  private bsModal!: Modal;
+  private bsConfirmModal!: Modal;
+  private pendingDeleteAccount: Account | null = null;
 
   constructor(
     private accountService: AccountService,
     private fb: FormBuilder,
-    private ngbModal: NgbModal,
     private elRef: ElementRef
   ) {
     this.form = this.fb.group({
@@ -161,6 +185,16 @@ export class AccountsComponent implements OnInit {
   }
 
   ngOnInit(): void { this.loadAccounts(); }
+
+  ngAfterViewInit(): void {
+    this.bsModal = new Modal(this.formModalEl.nativeElement, { backdrop: 'static', keyboard: false });
+    this.bsConfirmModal = new Modal(this.confirmModalEl.nativeElement);
+  }
+
+  ngOnDestroy(): void {
+    this.bsModal?.dispose();
+    this.bsConfirmModal?.dispose();
+  }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
@@ -194,12 +228,11 @@ export class AccountsComponent implements OnInit {
     } else {
       this.form.reset({ name: '', type: 'bank', description: '', color: '#4e73df' });
     }
-    this.modalRef = this.ngbModal.open(this.formModal, { centered: true, backdrop: 'static' });
+    this.bsModal.show();
   }
 
   closeModal(): void {
-    this.modalRef?.close();
-    this.modalRef = null;
+    this.bsModal.hide();
     this.editingAccount.set(null);
   }
 
@@ -217,10 +250,20 @@ export class AccountsComponent implements OnInit {
   }
 
   confirmDelete(account: Account): void {
-    const ref = this.ngbModal.open(ConfirmDialogComponent, { centered: true });
-    ref.componentInstance.title = 'Konto loeschen';
-    ref.componentInstance.message = `Moechten Sie das Konto "${account.name}" wirklich loeschen?`;
-    ref.result.then((r) => { if (r === 'confirmed') this.doDelete(account); }, () => {});
+    this.pendingDeleteAccount = account;
+    this.confirmMessage = `Moechten Sie das Konto "${account.name}" wirklich loeschen?`;
+    this.bsConfirmModal.show();
+  }
+
+  cancelDelete(): void {
+    this.bsConfirmModal.hide();
+    this.pendingDeleteAccount = null;
+  }
+
+  executeDelete(): void {
+    this.bsConfirmModal.hide();
+    if (this.pendingDeleteAccount) this.doDelete(this.pendingDeleteAccount);
+    this.pendingDeleteAccount = null;
   }
 
   private doDelete(account: Account): void {

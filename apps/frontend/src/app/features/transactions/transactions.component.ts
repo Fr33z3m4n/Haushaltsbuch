@@ -1,7 +1,7 @@
-import { Component, OnInit, signal, computed, ViewChild, TemplateRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, signal, computed, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { Modal } from 'bootstrap';
 import { TransactionService } from '../../core/services/transaction.service';
 import { AccountService } from '../../core/services/account.service';
 import { CategoryService } from '../../core/services/category.service';
@@ -9,7 +9,6 @@ import { Transaction, TransactionType, FREQUENCY_LABELS, getMonthlyAmount } from
 import { Account } from '../../core/models/account.model';
 import { Category } from '../../core/models/category.model';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { CurrencyDePipe } from '../../shared/pipes/currency-de.pipe';
 import { FrequencyLabelPipe } from '../../shared/pipes/frequency-label.pipe';
 
@@ -157,104 +156,127 @@ import { FrequencyLabelPipe } from '../../shared/pipes/frequency-label.pipe';
       </div>
     </div>
 
-    <ng-template #formModal>
-      <div class="modal-header">
-        <h5 class="modal-title">
-          <i class="fa-solid fa-right-left me-2"></i>
-          {{ editingTransaction() ? 'Buchung bearbeiten' : 'Neue Buchung' }}
-        </h5>
-        <button type="button" class="btn-close" (click)="closeModal()"></button>
+    <!-- Form Modal -->
+    <div class="modal fade" #formModalEl tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fa-solid fa-right-left me-2"></i>
+              {{ editingTransaction() ? 'Buchung bearbeiten' : 'Neue Buchung' }}
+            </h5>
+            <button type="button" class="btn-close" (click)="closeModal()"></button>
+          </div>
+          <form [formGroup]="form" (ngSubmit)="save()">
+            <div class="modal-body">
+              <div class="alert alert-danger" *ngIf="saveError()">{{ saveError() }}</div>
+              <div class="row g-3">
+                <div class="col-md-8">
+                  <label class="form-label fw-bold small">Bezeichnung <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" formControlName="name" placeholder="z.B. Miete"
+                         [class.is-invalid]="form.get('name')?.invalid && form.get('name')?.touched">
+                  <div class="invalid-feedback">Bezeichnung ist erforderlich.</div>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold small">Typ <span class="text-danger">*</span></label>
+                  <select class="form-select" formControlName="type">
+                    <option value="income">Einnahme</option>
+                    <option value="expense">Ausgabe</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold small">Betrag (EUR) <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text">EUR</span>
+                    <input type="number" class="form-control" formControlName="amount" placeholder="0.00" step="0.01" min="0"
+                           [class.is-invalid]="form.get('amount')?.invalid && form.get('amount')?.touched">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold small">Intervall <span class="text-danger">*</span></label>
+                  <select class="form-select" formControlName="frequency">
+                    <option value="monthly">Monatlich</option>
+                    <option value="quarterly">Vierteljaehrlich</option>
+                    <option value="semi_annual">Halbjaehrlich</option>
+                    <option value="annual">Jaehrlich</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold small">Faellig am (Tag) <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" formControlName="dayOfMonth" placeholder="1" min="1" max="31"
+                           [class.is-invalid]="form.get('dayOfMonth')?.invalid && form.get('dayOfMonth')?.touched">
+                    <span class="input-group-text">. des Monats</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold small">Konto <span class="text-danger">*</span></label>
+                  <select class="form-select" formControlName="accountId"
+                          [class.is-invalid]="form.get('accountId')?.invalid && form.get('accountId')?.touched">
+                    <option value="">Konto auswaehlen...</option>
+                    <option *ngFor="let acc of accounts()" [value]="acc.id">{{ acc.name }}</option>
+                  </select>
+                  <div class="invalid-feedback">Bitte waehlen Sie ein Konto aus.</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold small">Kategorie <span class="text-danger">*</span></label>
+                  <select class="form-select" formControlName="categoryId"
+                          [class.is-invalid]="form.get('categoryId')?.invalid && form.get('categoryId')?.touched">
+                    <option value="">Kategorie auswaehlen...</option>
+                    <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
+                  </select>
+                  <div class="invalid-feedback">Bitte waehlen Sie eine Kategorie aus.</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold small">Startdatum <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" formControlName="startDate"
+                         [class.is-invalid]="form.get('startDate')?.invalid && form.get('startDate')?.touched">
+                  <div class="invalid-feedback">Startdatum ist erforderlich.</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold small">Enddatum <span class="text-muted">(optional)</span></label>
+                  <input type="date" class="form-control" formControlName="endDate">
+                  <div class="form-text">Leer lassen wenn unbegrenzt.</div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-bold small">Notizen</label>
+                  <textarea class="form-control" formControlName="notes" rows="2" placeholder="Optionale Anmerkungen..."></textarea>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeModal()">Abbrechen</button>
+              <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving()">
+                <span class="spinner-border spinner-border-sm me-1" *ngIf="isSaving()"></span>
+                {{ isSaving() ? 'Speichern...' : 'Speichern' }}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-      <form [formGroup]="form" (ngSubmit)="save()">
-        <div class="modal-body">
-          <div class="alert alert-danger" *ngIf="saveError()">{{ saveError() }}</div>
-          <div class="row g-3">
-            <div class="col-md-8">
-              <label class="form-label fw-bold small">Bezeichnung <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" formControlName="name" placeholder="z.B. Miete"
-                     [class.is-invalid]="form.get('name')?.invalid && form.get('name')?.touched">
-              <div class="invalid-feedback">Bezeichnung ist erforderlich.</div>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">Typ <span class="text-danger">*</span></label>
-              <select class="form-select" formControlName="type">
-                <option value="income">Einnahme</option>
-                <option value="expense">Ausgabe</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">Betrag (EUR) <span class="text-danger">*</span></label>
-              <div class="input-group">
-                <span class="input-group-text">EUR</span>
-                <input type="number" class="form-control" formControlName="amount" placeholder="0.00" step="0.01" min="0"
-                       [class.is-invalid]="form.get('amount')?.invalid && form.get('amount')?.touched">
-              </div>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">Intervall <span class="text-danger">*</span></label>
-              <select class="form-select" formControlName="frequency">
-                <option value="monthly">Monatlich</option>
-                <option value="quarterly">Vierteljaehrlich</option>
-                <option value="semi_annual">Halbjaehrlich</option>
-                <option value="annual">Jaehrlich</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">Faellig am (Tag) <span class="text-danger">*</span></label>
-              <div class="input-group">
-                <input type="number" class="form-control" formControlName="dayOfMonth" placeholder="1" min="1" max="31"
-                       [class.is-invalid]="form.get('dayOfMonth')?.invalid && form.get('dayOfMonth')?.touched">
-                <span class="input-group-text">. des Monats</span>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-bold small">Konto <span class="text-danger">*</span></label>
-              <select class="form-select" formControlName="accountId"
-                      [class.is-invalid]="form.get('accountId')?.invalid && form.get('accountId')?.touched">
-                <option value="">Konto auswaehlen...</option>
-                <option *ngFor="let acc of accounts()" [value]="acc.id">{{ acc.name }}</option>
-              </select>
-              <div class="invalid-feedback">Bitte waehlen Sie ein Konto aus.</div>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-bold small">Kategorie <span class="text-danger">*</span></label>
-              <select class="form-select" formControlName="categoryId"
-                      [class.is-invalid]="form.get('categoryId')?.invalid && form.get('categoryId')?.touched">
-                <option value="">Kategorie auswaehlen...</option>
-                <option *ngFor="let cat of categories()" [value]="cat.id">{{ cat.name }}</option>
-              </select>
-              <div class="invalid-feedback">Bitte waehlen Sie eine Kategorie aus.</div>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-bold small">Startdatum <span class="text-danger">*</span></label>
-              <input type="date" class="form-control" formControlName="startDate"
-                     [class.is-invalid]="form.get('startDate')?.invalid && form.get('startDate')?.touched">
-              <div class="invalid-feedback">Startdatum ist erforderlich.</div>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-bold small">Enddatum <span class="text-muted">(optional)</span></label>
-              <input type="date" class="form-control" formControlName="endDate">
-              <div class="form-text">Leer lassen wenn unbegrenzt.</div>
-            </div>
-            <div class="col-12">
-              <label class="form-label fw-bold small">Notizen</label>
-              <textarea class="form-control" formControlName="notes" rows="2" placeholder="Optionale Anmerkungen..."></textarea>
-            </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div class="modal fade" #confirmModalEl tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fa-solid fa-trash me-2 text-danger"></i>Buchung loeschen</h5>
+            <button type="button" class="btn-close" (click)="cancelDelete()"></button>
+          </div>
+          <div class="modal-body">{{ confirmMessage }}</div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="cancelDelete()">Abbrechen</button>
+            <button class="btn btn-danger" (click)="executeDelete()">Loeschen</button>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="closeModal()">Abbrechen</button>
-          <button type="submit" class="btn btn-primary" [disabled]="form.invalid || isSaving()">
-            <span class="spinner-border spinner-border-sm me-1" *ngIf="isSaving()"></span>
-            {{ isSaving() ? 'Speichern...' : 'Speichern' }}
-          </button>
-        </div>
-      </form>
-    </ng-template>
+      </div>
+    </div>
   `
 })
-export class TransactionsComponent implements OnInit {
-  @ViewChild('formModal') formModal!: TemplateRef<unknown>;
+export class TransactionsComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('formModalEl') formModalEl!: ElementRef;
+  @ViewChild('confirmModalEl') confirmModalEl!: ElementRef;
 
   transactions = signal<Transaction[]>([]);
   filteredTransactions = signal<Transaction[]>([]);
@@ -265,6 +287,7 @@ export class TransactionsComponent implements OnInit {
   editingTransaction = signal<Transaction | null>(null);
   isSaving = signal(false);
   saveError = signal('');
+  confirmMessage = '';
 
   searchTerm = '';
   filterType = '';
@@ -273,14 +296,15 @@ export class TransactionsComponent implements OnInit {
   sortDir: 'asc' | 'desc' = 'asc';
 
   form: FormGroup;
-  private modalRef: NgbModalRef | null = null;
+  private bsModal!: Modal;
+  private bsConfirmModal!: Modal;
+  private pendingDeleteTransaction: Transaction | null = null;
 
   constructor(
     private transactionService: TransactionService,
     private accountService: AccountService,
     private categoryService: CategoryService,
-    private fb: FormBuilder,
-    private ngbModal: NgbModal
+    private fb: FormBuilder
   ) {
     this.form = this.fb.group({
       name: ['', Validators.required],
@@ -297,6 +321,16 @@ export class TransactionsComponent implements OnInit {
   }
 
   ngOnInit(): void { this.loadAll(); }
+
+  ngAfterViewInit(): void {
+    this.bsModal = new Modal(this.formModalEl.nativeElement, { backdrop: 'static', keyboard: false });
+    this.bsConfirmModal = new Modal(this.confirmModalEl.nativeElement);
+  }
+
+  ngOnDestroy(): void {
+    this.bsModal?.dispose();
+    this.bsConfirmModal?.dispose();
+  }
 
   loadAll(): void {
     this.isLoading.set(true);
@@ -388,12 +422,11 @@ export class TransactionsComponent implements OnInit {
         startDate: new Date().toISOString().split('T')[0], endDate: '', notes: ''
       });
     }
-    this.modalRef = this.ngbModal.open(this.formModal, { centered: true, backdrop: 'static', size: 'lg' });
+    this.bsModal.show();
   }
 
   closeModal(): void {
-    this.modalRef?.close();
-    this.modalRef = null;
+    this.bsModal.hide();
     this.editingTransaction.set(null);
   }
 
@@ -414,10 +447,20 @@ export class TransactionsComponent implements OnInit {
   }
 
   confirmDelete(transaction: Transaction): void {
-    const ref = this.ngbModal.open(ConfirmDialogComponent, { centered: true });
-    ref.componentInstance.title = 'Buchung loeschen';
-    ref.componentInstance.message = `Moechten Sie die Buchung "${transaction.name}" wirklich loeschen?`;
-    ref.result.then((r) => { if (r === 'confirmed') this.doDelete(transaction); }, () => {});
+    this.pendingDeleteTransaction = transaction;
+    this.confirmMessage = `Moechten Sie die Buchung "${transaction.name}" wirklich loeschen?`;
+    this.bsConfirmModal.show();
+  }
+
+  cancelDelete(): void {
+    this.bsConfirmModal.hide();
+    this.pendingDeleteTransaction = null;
+  }
+
+  executeDelete(): void {
+    this.bsConfirmModal.hide();
+    if (this.pendingDeleteTransaction) this.doDelete(this.pendingDeleteTransaction);
+    this.pendingDeleteTransaction = null;
   }
 
   private doDelete(transaction: Transaction): void {

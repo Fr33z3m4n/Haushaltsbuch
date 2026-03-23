@@ -1,6 +1,5 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-confirm-dialog',
@@ -9,18 +8,18 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
   template: `
     <div class="modal-header">
       <h5 class="modal-title">{{ title }}</h5>
-      <button type="button" class="btn-close" (click)="activeModal.dismiss()"></button>
+      <button type="button" class="btn-close" (click)="cancelled.emit()"></button>
     </div>
     <div class="modal-body">{{ message }}</div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="activeModal.dismiss()">Abbrechen</button>
-      <button class="btn btn-danger" (click)="activeModal.close('confirmed')">Löschen</button>
+      <button class="btn btn-secondary" (click)="cancelled.emit()">Abbrechen</button>
+      <button class="btn btn-danger" (click)="confirmed.emit()">Löschen</button>
     </div>
   `
 })
 export class ConfirmDialogComponent {
   @Input() title = 'Bestätigen';
   @Input() message = 'Möchten Sie diesen Eintrag wirklich löschen?';
-
-  constructor(public activeModal: NgbActiveModal) {}
+  @Output() confirmed = new EventEmitter<void>();
+  @Output() cancelled = new EventEmitter<void>();
 }
