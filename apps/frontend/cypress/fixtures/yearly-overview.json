@@ -1,0 +1,20 @@
+{
+  "year": 2024,
+  "annualIncome": 36000,
+  "annualExpense": 13560,
+  "annualBalance": 22440,
+  "months": [
+    { "month": 1, "monthName": "Januar",   "totalIncome": 3000, "totalExpense": 1130, "balance": 1870, "items": [] },
+    { "month": 2, "monthName": "Februar",  "totalIncome": 3000, "totalExpense": 1130, "balance": 1870, "items": [] },
+    { "month": 3, "monthName": "März",     "totalIncome": 3000, "totalExpense": 1130, "balance": 1870, "items": [] },
+    { "month": 4, "monthName": "April",    "totalIncome": 3000, "totalExpense": 1130, "balance": 1870, "items": [] },
+    { "month": 5, "monthName": "Mai",      "totalIncome": 3000, "totalExpense": 1130, "balance": 1870, "items": [] },
+    { "month": 6, "monthName": "Juni",     "totalIncome": 3000, "totalExpense": 1130, "balance": 1870, "items": [] },
+    { "month": 7, "monthName": "Juli",     "totalIncome": 3000, "totalExpense": 1130, "balance": 1870, "items": [] },
+    { "month": 8, "monthName": "August",   "totalIncome": 3000, "totalExpense": 1130, "balance": 1870, "items": [] },
+    { "month": 9, "monthName": "September","totalIncome": 3000, "totalExpense": 1130, "balance": 1870, "items": [] },
+    { "month": 10,"monthName": "Oktober",  "totalIncome": 3000, "totalExpense": 1130, "balance": 1870, "items": [] },
+    { "month": 11,"monthName": "November", "totalIncome": 3000, "totalExpense": 1130, "balance": 1870, "items": [] },
+    { "month": 12,"monthName": "Dezember", "totalIncome": 3000, "totalExpense": 1130, "balance": 1870, "items": [] }
+  ]
+}
