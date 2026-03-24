@@ -10,13 +10,23 @@ export default defineConfig({
       },
     }),
     baseUrl: 'http://localhost:4200',
-    viewportWidth: 1280,
-    viewportHeight: 800,
+    viewportWidth: 1440,
+    viewportHeight: 900,
     video: false,
     screenshotOnRunFailure: true,
     defaultCommandTimeout: 8000,
     env: {
       apiUrl: 'http://localhost:4200/api',
+    },
+    setupNodeEvents(on) {
+      on('before:browser:launch', (browser, launchOptions) => {
+        if ((browser.name === 'chrome' || browser.name === 'chromium') && browser.isHeadless) {
+          launchOptions.args.push('--window-size=1440,900');
+          launchOptions.args.push('--force-device-scale-factor=1');
+          launchOptions.args.push('--hide-scrollbars');
+        }
+        return launchOptions;
+      });
     },
   },
 });
