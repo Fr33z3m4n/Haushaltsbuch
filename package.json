@@ -16,6 +16,7 @@
     "cy:run": "cypress run --project apps/frontend",
     "cy:run:chrome": "cypress run --project apps/frontend --browser chrome",
     "cy:run:firefox": "cypress run --project apps/frontend --browser firefox",
+    "screenshots": "cypress run --project apps/frontend --browser chrome --spec \"apps/frontend/cypress/e2e/screenshots.cy.ts\"",
     "e2e": "nx e2e frontend",
     "e2e:ci": "nx e2e frontend --configuration=ci"
   },
