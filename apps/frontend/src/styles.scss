@@ -433,6 +433,18 @@ body {
   // Form check
   --bs-form-check-bg:         #111827;
 
+  // Bootstrap table variant overrides — .table-light / .table-dark ignore our tokens otherwise
+  .table-light {
+    --bs-table-color:         #d1d5db;
+    --bs-table-bg:            #1a2232;
+    --bs-table-striped-bg:    rgba(255,255,255,.03);
+    --bs-table-hover-bg:      rgba(255,255,255,.05);
+    --bs-table-border-color:  rgba(255,255,255,.08);
+    color: #d1d5db;
+
+    th, td { color: #d1d5db; border-color: rgba(255,255,255,.08); }
+  }
+
   color-scheme: dark;
 }
 

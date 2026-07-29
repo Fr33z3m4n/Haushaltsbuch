@@ -15,6 +15,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Monatsübersicht', icon: 'calendar-check', route: '/monatsübersicht' },
   { label: 'Jahresübersicht', icon: 'calendar', route: '/jahresübersicht' },
   { label: 'Buchungen', icon: 'right-left', route: '/buchungen' },
+  { label: 'Quittungen', icon: 'receipt', route: '/quittungen' },
   { label: 'Konten', icon: 'building-columns', route: '/konten' },
   { label: 'Kategorien', icon: 'tags', route: '/kategorien' },
 ];

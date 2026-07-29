@@ -47,6 +47,10 @@ export const routes: Routes = [
         path: 'benutzerverwaltung',
         canActivate: [adminGuard],
         loadComponent: () => import('./features/admin/users-management.component').then(m => m.UsersManagementComponent)
+      },
+      {
+        path: 'quittungen',
+        loadComponent: () => import('./features/receipts/receipts.component').then(m => m.ReceiptsComponent)
       }
     ]
   },

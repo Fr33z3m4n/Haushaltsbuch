@@ -6,6 +6,7 @@ import { transactionsRouter } from './transactions.routes';
 import { monthlyOverviewRouter } from './monthly-overview.routes';
 import { yearlyOverviewRouter } from './yearly-overview.routes';
 import { usersRouter } from './users.routes';
+import { receiptsRouter } from './receipts.routes';
 
 export const router = Router();
 
@@ -20,3 +21,4 @@ router.use('/transactions', transactionsRouter);
 router.use('/monthly-overview', monthlyOverviewRouter);
 router.use('/yearly-overview', yearlyOverviewRouter);
 router.use('/users', usersRouter);
+router.use('/receipts', receiptsRouter);

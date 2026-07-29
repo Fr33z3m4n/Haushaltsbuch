@@ -40,11 +40,30 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-500}
+      OCR_SERVICE_URL: ${OCR_SERVICE_URL:-http://ocr-service:8001}
     ports:
       - "3000:3000"
     depends_on:
       mysql:
         condition: service_healthy
+      ocr-service:
+        condition: service_healthy
+
+  # ── OCR Service ───────────────────────────────────────────────────────────
+  ocr-service:
+    build:
+      context: .
+      dockerfile: apps/ocr-service/Dockerfile
+    container_name: haushaltsbuch-ocr
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   # ── Frontend ──────────────────────────────────────────────────────────────
   frontend:

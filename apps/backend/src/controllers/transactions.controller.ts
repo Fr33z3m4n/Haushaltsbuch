@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { AppDataSource } from '../config/database';
 import { Transaction, TransactionFrequency } from '../entities/Transaction';
 
+const RECEIPT_CATEGORY_NAME = 'Quittungen';
+
 const repo = () => AppDataSource.getRepository(Transaction);
 
 export const getMonthlyAmount = (transaction: Transaction): number => {
@@ -22,11 +24,14 @@ export const getMonthlyAmount = (transaction: Transaction): number => {
 
 export const getAll = async (req: Request, res: Response): Promise<void> => {
   try {
-    const transactions = await repo().find({
-      where: { userId: req.user!.id },
-      relations: ['account', 'category'],
-      order: { name: 'ASC' },
-    });
+    const transactions = await repo()
+      .createQueryBuilder('t')
+      .leftJoinAndSelect('t.account', 'account')
+      .leftJoinAndSelect('t.category', 'category')
+      .where('t.userId = :userId', { userId: req.user!.id })
+      .andWhere('category.name != :receiptCat OR category.name IS NULL', { receiptCat: RECEIPT_CATEGORY_NAME })
+      .orderBy('t.name', 'ASC')
+      .getMany();
     res.json(transactions);
   } catch (error) {
     console.error('getAll transactions error:', error);
