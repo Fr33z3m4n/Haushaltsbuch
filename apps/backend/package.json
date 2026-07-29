@@ -1,6 +1,6 @@
 {
   "name": "haushaltsbuch-backend",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "scripts": {
     "dev": "nodemon src/index.ts",
     "build": "tsc",
