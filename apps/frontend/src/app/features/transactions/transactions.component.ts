@@ -76,13 +76,13 @@ import { FrequencyLabelPipe } from '../../shared/pipes/frequency-label.pipe';
     <div class="card mb-4">
       <div class="card-body py-2">
         <div class="row g-2 align-items-center">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <div class="input-group input-group-sm">
               <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
               <input type="text" class="form-control" placeholder="Suchen..." [(ngModel)]="searchTerm" (input)="applyFilter()">
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-2">
             <select class="form-select form-select-sm" [(ngModel)]="filterType" (change)="applyFilter()">
               <option value="">Alle Typen</option>
               <option value="income">Einnahmen</option>
@@ -96,6 +96,12 @@ import { FrequencyLabelPipe } from '../../shared/pipes/frequency-label.pipe';
               <option value="quarterly">Vierteljaehrlich</option>
               <option value="semi_annual">Halbjaehrlich</option>
               <option value="annual">Jaehrlich</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <select class="form-select form-select-sm" [(ngModel)]="filterAccountId" (change)="applyFilter()">
+              <option value="">Alle Konten</option>
+              <option *ngFor="let acc of accounts()" [value]="acc.id">{{ acc.name }}</option>
             </select>
           </div>
           <div class="col-md-2 text-end">
@@ -454,6 +460,7 @@ export class TransactionsComponent implements OnInit, AfterViewInit, OnDestroy {
   searchTerm = '';
   filterType = '';
   filterFrequency = '';
+  filterAccountId = '';
   sortCol = '';
   sortDir: 'asc' | 'desc' = 'asc';
 
@@ -514,6 +521,7 @@ export class TransactionsComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.searchTerm) result = result.filter(t => t.name.toLowerCase().includes(this.searchTerm.toLowerCase()));
     if (this.filterType) result = result.filter(t => t.type === this.filterType);
     if (this.filterFrequency) result = result.filter(t => t.frequency === this.filterFrequency);
+    if (this.filterAccountId) result = result.filter(t => t.accountId === this.filterAccountId);
     this.filteredTransactions.set(this.sortTransactions(result.filter(t => !this.isExpired(t))));
     this.filteredExpired.set(this.sortTransactions(result.filter(t => this.isExpired(t))));
   }
@@ -522,6 +530,7 @@ export class TransactionsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.searchTerm = '';
     this.filterType = '';
     this.filterFrequency = '';
+    this.filterAccountId = '';
     const all = this.transactions();
     this.filteredTransactions.set(this.sortTransactions(all.filter(t => !this.isExpired(t))));
     this.filteredExpired.set(this.sortTransactions(all.filter(t => this.isExpired(t))));
