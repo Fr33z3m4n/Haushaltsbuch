@@ -197,8 +197,9 @@ import { FrequencyLabelPipe } from '../../shared/pipes/frequency-label.pipe';
               <td class="text-muted small">{{ t.endDate ? (t.endDate | date:'dd.MM.yyyy') : '-' }}</td>
               <td>
                 <div class="d-flex gap-1">
-                  <button class="btn btn-sm btn-outline-primary" (click)="openModal(t)"><i class="fa-solid fa-pencil"></i></button>
-                  <button class="btn btn-sm btn-outline-danger" (click)="confirmDelete(t)"><i class="fa-solid fa-trash"></i></button>
+                  <button class="btn btn-sm btn-outline-secondary" (click)="copyTransaction(t)" title="Kopieren"><i class="fa-solid fa-copy"></i></button>
+                  <button class="btn btn-sm btn-outline-primary" (click)="openModal(t)" title="Bearbeiten"><i class="fa-solid fa-pencil"></i></button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="confirmDelete(t)" title="Löschen"><i class="fa-solid fa-trash"></i></button>
                 </div>
               </td>
             </tr>
@@ -277,8 +278,9 @@ import { FrequencyLabelPipe } from '../../shared/pipes/frequency-label.pipe';
                 <td class="small text-danger">{{ t.endDate | date:'dd.MM.yyyy' }}</td>
                 <td>
                   <div class="d-flex gap-1">
-                    <button class="btn btn-sm btn-outline-primary" (click)="openModal(t)"><i class="fa-solid fa-pencil"></i></button>
-                    <button class="btn btn-sm btn-outline-danger" (click)="confirmDelete(t)"><i class="fa-solid fa-trash"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary" (click)="copyTransaction(t)" title="Kopieren"><i class="fa-solid fa-copy"></i></button>
+                    <button class="btn btn-sm btn-outline-primary" (click)="openModal(t)" title="Bearbeiten"><i class="fa-solid fa-pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" (click)="confirmDelete(t)" title="Löschen"><i class="fa-solid fa-trash"></i></button>
                   </div>
                 </td>
               </tr>
@@ -601,6 +603,24 @@ export class TransactionsComponent implements OnInit, AfterViewInit, OnDestroy {
         startDate: new Date().toISOString().split('T')[0], endDate: '', notes: ''
       });
     }
+    this.bsModal.show();
+  }
+
+  copyTransaction(transaction: Transaction): void {
+    this.editingTransaction.set(null);
+    this.saveError.set('');
+    this.form.reset({
+      name: transaction.name,
+      type: transaction.type,
+      amount: transaction.amount,
+      frequency: transaction.frequency,
+      dayOfMonth: transaction.dayOfMonth,
+      accountId: transaction.accountId,
+      categoryId: transaction.categoryId,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: '',
+      notes: transaction.notes ?? ''
+    });
     this.bsModal.show();
   }
 
