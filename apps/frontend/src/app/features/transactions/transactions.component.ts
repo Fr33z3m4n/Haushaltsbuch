@@ -68,7 +68,7 @@ import { FrequencyLabelPipe } from '../../shared/pipes/frequency-label.pipe';
 
     <div class="card" *ngIf="!isLoading()">
       <div class="card-header d-flex justify-content-between align-items-center border-left-primary">
-        <span><i class="fa-solid fa-right-left me-2"></i>Buchungen ({{ filteredTransactions().length }})</span>
+        <span><i class="fa-solid fa-right-left me-2"></i>Aktive Buchungen ({{ filteredTransactions().length }})</span>
       </div>
       <div class="table-responsive">
         <table class="table table-hover mb-0">
@@ -153,6 +153,82 @@ import { FrequencyLabelPipe } from '../../shared/pipes/frequency-label.pipe';
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Abgelaufene Buchungen -->
+    <div class="card mt-4" *ngIf="!isLoading() && filteredExpired().length > 0">
+      <div class="card-header d-flex justify-content-between align-items-center border-left-secondary" style="border-left: 4px solid #6c757d;">
+        <span class="text-muted">
+          <i class="fa-solid fa-clock-rotate-left me-2"></i>Abgelaufene Buchungen ({{ filteredExpired().length }})
+        </span>
+        <button class="btn btn-sm btn-outline-secondary" (click)="showExpired.set(!showExpired())">
+          <i class="fa-solid me-1" [class.fa-chevron-down]="!showExpired()" [class.fa-chevron-up]="showExpired()"></i>
+          {{ showExpired() ? 'Ausblenden' : 'Einblenden' }}
+        </button>
+      </div>
+      <div *ngIf="showExpired()">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 text-muted">
+            <thead class="table-header-themed opacity-75">
+              <tr>
+                <th>Name</th>
+                <th>Betrag</th>
+                <th>Monatlich</th>
+                <th>Intervall</th>
+                <th>Konto</th>
+                <th>Kategorie</th>
+                <th>Fällig am</th>
+                <th>Von</th>
+                <th>Bis</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of filteredExpired()" class="opacity-75">
+                <td>
+                  <span class="badge me-1" [class.bg-success]="t.type === 'income'" [class.bg-danger]="t.type === 'expense'">
+                    <i class="fa-solid" [class.fa-arrow-up]="t.type === 'income'" [class.fa-arrow-down]="t.type === 'expense'"></i>
+                  </span>
+                  {{ t.name }}
+                </td>
+                <td class="fw-bold" [class.text-success]="t.type === 'income'" [class.text-danger]="t.type === 'expense'">
+                  {{ t.amount | currencyDe }}
+                </td>
+                <td class="small">
+                  <span *ngIf="t.frequency !== 'monthly'">{{ getMonthly(t.amount, t.frequency) | currencyDe }}</span>
+                  <span *ngIf="t.frequency === 'monthly'">-</span>
+                </td>
+                <td><span class="badge" [ngClass]="getFrequencyClass(t.frequency)">{{ t.frequency | frequencyLabel }}</span></td>
+                <td>
+                  <span *ngIf="t.account" class="d-flex align-items-center gap-1">
+                    <span class="rounded-circle" [style.background-color]="t.account.color" style="width:10px;height:10px;display:inline-block"></span>
+                    {{ t.account.name }}
+                  </span>
+                  <span *ngIf="!t.account" class="small">-</span>
+                </td>
+                <td>
+                  <span *ngIf="t.category" class="badge rounded-pill"
+                        [style.background-color]="t.category.color + '30'"
+                        [style.color]="t.category.color"
+                        [style.border]="'1px solid ' + t.category.color">
+                    <i class="fa-solid fa-{{t.category.icon || 'tag'}} me-1"></i>{{ t.category.name }}
+                  </span>
+                  <span *ngIf="!t.category" class="small">-</span>
+                </td>
+                <td class="small">{{ t.dayOfMonth }}.</td>
+                <td class="small">{{ t.startDate | date:'dd.MM.yyyy' }}</td>
+                <td class="small text-danger">{{ t.endDate | date:'dd.MM.yyyy' }}</td>
+                <td>
+                  <div class="d-flex gap-1">
+                    <button class="btn btn-sm btn-outline-primary" (click)="openModal(t)"><i class="fa-solid fa-pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" (click)="confirmDelete(t)"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -280,6 +356,8 @@ export class TransactionsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   transactions = signal<Transaction[]>([]);
   filteredTransactions = signal<Transaction[]>([]);
+  filteredExpired = signal<Transaction[]>([]);
+  showExpired = signal(false);
   accounts = signal<Account[]>([]);
   categories = signal<Category[]>([]);
   isLoading = signal(true);
@@ -288,6 +366,14 @@ export class TransactionsComponent implements OnInit, AfterViewInit, OnDestroy {
   isSaving = signal(false);
   saveError = signal('');
   confirmMessage = '';
+
+  private get today(): string {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  private isExpired(t: Transaction): boolean {
+    return !!t.endDate && t.endDate < this.today;
+  }
 
   searchTerm = '';
   filterType = '';
@@ -337,7 +423,12 @@ export class TransactionsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.accountService.getAll().subscribe(data => this.accounts.set(data));
     this.categoryService.getAll().subscribe(data => this.categories.set(data));
     this.transactionService.getAll().subscribe({
-      next: (data) => { this.transactions.set(data); this.filteredTransactions.set(this.sortTransactions(data)); this.isLoading.set(false); },
+      next: (data) => {
+        this.transactions.set(data);
+        this.filteredTransactions.set(this.sortTransactions(data.filter(t => !this.isExpired(t))));
+        this.filteredExpired.set(this.sortTransactions(data.filter(t => this.isExpired(t))));
+        this.isLoading.set(false);
+      },
       error: () => { this.errorMsg.set('Fehler beim Laden.'); this.isLoading.set(false); }
     });
   }
@@ -347,14 +438,17 @@ export class TransactionsComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.searchTerm) result = result.filter(t => t.name.toLowerCase().includes(this.searchTerm.toLowerCase()));
     if (this.filterType) result = result.filter(t => t.type === this.filterType);
     if (this.filterFrequency) result = result.filter(t => t.frequency === this.filterFrequency);
-    this.filteredTransactions.set(this.sortTransactions(result));
+    this.filteredTransactions.set(this.sortTransactions(result.filter(t => !this.isExpired(t))));
+    this.filteredExpired.set(this.sortTransactions(result.filter(t => this.isExpired(t))));
   }
 
   clearFilter(): void {
     this.searchTerm = '';
     this.filterType = '';
     this.filterFrequency = '';
-    this.filteredTransactions.set(this.sortTransactions(this.transactions()));
+    const all = this.transactions();
+    this.filteredTransactions.set(this.sortTransactions(all.filter(t => !this.isExpired(t))));
+    this.filteredExpired.set(this.sortTransactions(all.filter(t => this.isExpired(t))));
   }
 
   private sortTransactions(list: Transaction[]): Transaction[] {
