@@ -10,6 +10,8 @@ Dieses Projekt wurde als **Experiment** vollständig durch den KI-Assistenten **
 
 Kein einzige Zeile Code wurde manuell geschrieben. Alle Entscheidungen (Tech-Stack, Ordnerstruktur, Datenbankschema, UI/UX) wurden durch Dialog mit Copilot erarbeitet.
 
+Die **Weiterentwicklung** ab Version 1.0.5 erfolgt durch **Claude** (Anthropic) anstelle von GitHub Copilot.
+
 ---
 
 ## 🎯 Zielbild
