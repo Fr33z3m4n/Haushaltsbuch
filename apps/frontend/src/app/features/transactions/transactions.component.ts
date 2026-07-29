@@ -9,19 +9,69 @@ import { Transaction, TransactionType, FREQUENCY_LABELS, getMonthlyAmount } from
 import { Account } from '../../core/models/account.model';
 import { Category } from '../../core/models/category.model';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { CurrencyDePipe } from '../../shared/pipes/currency-de.pipe';
 import { FrequencyLabelPipe } from '../../shared/pipes/frequency-label.pipe';
 
 @Component({
   selector: 'app-transactions',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, CurrencyDePipe, FrequencyLabelPipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, StatCardComponent, CurrencyDePipe, FrequencyLabelPipe],
   template: `
     <app-page-header title="Buchungen" breadcrumb="Buchungen">
       <button class="btn btn-primary" (click)="openModal()">
         <i class="fa-solid fa-plus me-1"></i>Neue Buchung
       </button>
     </app-page-header>
+
+    <!-- Summary Cards -->
+    <div class="row" *ngIf="!isLoading()">
+      <div class="col-xl-3 col-md-6">
+        <app-stat-card
+          label="Monatliche Einnahmen"
+          [value]="monthlyIncome() | currencyDe"
+          icon="circle-arrow-up"
+          variant="success">
+        </app-stat-card>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <app-stat-card
+          label="Monatliche Ausgaben"
+          [value]="monthlyExpense() | currencyDe"
+          icon="circle-arrow-down"
+          variant="danger">
+        </app-stat-card>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <app-stat-card
+          label="Monatliches Saldo"
+          [value]="monthlyBalance() | currencyDe"
+          icon="wallet"
+          [variant]="monthlyBalance() >= 0 ? 'success' : 'danger'">
+        </app-stat-card>
+      </div>
+    </div>
+
+    <!-- Per-Account Expense Cards -->
+    <div class="row mb-2" *ngIf="!isLoading() && accountExpenses().length > 0">
+      <div class="col-12 mb-2">
+        <small class="text-muted fw-semibold text-uppercase" style="letter-spacing:.05em">
+          <i class="fa-solid fa-building-columns me-1"></i>Ausgaben nach Konto (monatlich)
+        </small>
+      </div>
+      <div class="col-xl-3 col-md-4 col-sm-6" *ngFor="let acc of accountExpenses()">
+        <div class="card mb-3 shadow-sm" [style.border-left]="'4px solid ' + acc.color">
+          <div class="card-body py-2 px-3 d-flex align-items-center justify-content-between gap-2">
+            <div>
+              <div class="small fw-semibold text-truncate" style="max-width:130px">{{ acc.name }}</div>
+              <div class="fw-bold text-danger">{{ acc.monthly | currencyDe }}</div>
+            </div>
+            <span class="rounded-circle flex-shrink-0" [style.background]="acc.color"
+                  style="width:12px;height:12px;display:inline-block"></span>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="card mb-4">
       <div class="card-body py-2">
@@ -374,6 +424,32 @@ export class TransactionsComponent implements OnInit, AfterViewInit, OnDestroy {
   private isExpired(t: Transaction): boolean {
     return !!t.endDate && t.endDate < this.today;
   }
+
+  monthlyIncome = computed(() =>
+    this.transactions()
+      .filter(t => !this.isExpired(t) && t.type === 'income')
+      .reduce((sum, t) => sum + getMonthlyAmount(t.amount, t.frequency), 0)
+  );
+
+  monthlyExpense = computed(() =>
+    this.transactions()
+      .filter(t => !this.isExpired(t) && t.type === 'expense')
+      .reduce((sum, t) => sum + getMonthlyAmount(t.amount, t.frequency), 0)
+  );
+
+  monthlyBalance = computed(() => this.monthlyIncome() - this.monthlyExpense());
+
+  accountExpenses = computed(() => {
+    const map = new Map<string, { name: string; color: string; monthly: number }>();
+    for (const t of this.transactions()) {
+      if (this.isExpired(t) || t.type !== 'expense' || !t.account) continue;
+      const monthly = getMonthlyAmount(t.amount, t.frequency);
+      const entry = map.get(t.accountId);
+      if (entry) entry.monthly += monthly;
+      else map.set(t.accountId, { name: t.account.name, color: t.account.color, monthly });
+    }
+    return [...map.values()].sort((a, b) => b.monthly - a.monthly);
+  });
 
   searchTerm = '';
   filterType = '';
