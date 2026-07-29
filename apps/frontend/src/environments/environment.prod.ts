@@ -6,7 +6,7 @@ declare global {
 
 export const environment = {
   production: true,
-  version: '1.0.3',
+  version: '1.0.4',
   get apiUrl(): string {
     return window.__env?.['apiUrl'] ?? '/api';
   }
