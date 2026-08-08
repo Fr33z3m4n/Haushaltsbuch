@@ -76,7 +76,7 @@
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-cypress": "^3.5.0",
     "nodemon": "^3.0.2",
-    "nx": "^22.6.1",
+    "nx": "^22.7.7",
     "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
